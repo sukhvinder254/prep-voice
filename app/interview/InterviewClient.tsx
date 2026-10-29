@@ -24,7 +24,6 @@ interface HistoryItem {
   communicationTip?: string;
 }
 
-
 export default function Home() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -100,6 +99,12 @@ export default function Home() {
             question: item.question ?? "",
             category: item.category ?? item.role ?? "",
             score: Number(item.score ?? 0),
+            relevance: Number(item.feedback?.relevance ?? 0),
+            completeness: Number(item.feedback?.completeness ?? 0),
+            structure: Number(item.feedback?.structure ?? 0),
+            technicalAccuracy: Number(
+              item.feedback?.technicalAccuracy ?? 0
+            ),
             timestamp: new Date(item.created_at).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -154,6 +159,18 @@ export default function Home() {
       Math.min(10, rawScore > 10 ? Math.round(rawScore / 10) : rawScore)
     );
 
+    const feedbackDetails = {
+      relevance: Number(newFeedback?.relevance ?? 0),
+      completeness: Number(newFeedback?.completeness ?? 0),
+      structure: Number(newFeedback?.structure ?? 0),
+      technicalAccuracy: Number(newFeedback?.technicalAccuracy ?? 0),
+      strengths: newFeedback?.strengths ?? "",
+      improvements: newFeedback?.improvements ?? "",
+      sampleAnswer: newFeedback?.sampleAnswer ?? "",
+      followUpQuestion: newFeedback?.followUpQuestion ?? "",
+      communicationTip: newFeedback?.communicationTip ?? "",
+    };
+
     const { data, error } = await supabase
       .from("interview_history")
       .insert({
@@ -162,13 +179,7 @@ export default function Home() {
         question: questionText,
         category,
         score: scoreValue,
-        feedback: {
-          strengths: newFeedback?.strengths ?? "",
-          improvements: newFeedback?.improvements ?? "",
-          sampleAnswer: newFeedback?.sampleAnswer ?? "",
-          followUpQuestion: newFeedback?.followUpQuestion ?? "",
-          communicationTip: newFeedback?.communicationTip ?? "",
-        },
+        feedback: feedbackDetails,
         transcript: { answer: answerText },
       })
       .select()
@@ -186,6 +197,12 @@ export default function Home() {
         question: data.question ?? questionText,
         category: data.category ?? category,
         score: Number(data.score ?? scoreValue),
+        relevance: Number(data.feedback?.relevance ?? 0),
+        completeness: Number(data.feedback?.completeness ?? 0),
+        structure: Number(data.feedback?.structure ?? 0),
+        technicalAccuracy: Number(
+          data.feedback?.technicalAccuracy ?? 0
+        ),
         timestamp: new Date(data.created_at).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -390,7 +407,6 @@ export default function Home() {
     }
   };
 
-  // Use the AI-generated follow-up as the next practice question.
   const handlePracticeFollowUp = () => {
     const nextQuestion =
       typeof feedback?.followUpQuestion === "string"
@@ -764,7 +780,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* NEW: Sample answer */}
                 {feedback.sampleAnswer && (
                   <div className="mt-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-5 sm:p-6">
                     <div className="mb-3 flex items-center gap-2">
@@ -790,7 +805,6 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* NEW: Communication tip */}
                 {feedback.communicationTip && (
                   <div className="mt-4 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5">
                     <div className="flex items-start gap-3">
@@ -807,7 +821,6 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* NEW: Interactive follow-up question */}
                 {feedback.followUpQuestion && (
                   <div className="mt-4 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5 sm:p-6">
                     <div className="flex items-start gap-3">
@@ -953,7 +966,6 @@ export default function Home() {
   );
 }
 
-// Small helper to copy the example answer without adding another dependency.
 function GenCopyAnswer(text: string) {
   if (typeof navigator !== "undefined" && navigator.clipboard) {
     return navigator.clipboard.writeText(text).catch((error) => {
