@@ -149,6 +149,17 @@ export default async function DashboardPage() {
               Review your previous practice sessions.
             </p>
           </Link>
+
+          <Link
+            href="/resume"
+            className="rounded-2xl border border-purple-100 bg-white p-6 transition hover:-translate-y-1 hover:shadow-md"
+          >
+            <span className="text-2xl">📄</span>
+            <h3 className="mt-3 font-bold">Resume-Based Interview</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              Upload your resume and get AI-generated personalised interview questions.
+            </p>
+          </Link>
         </div>
       </section>
 

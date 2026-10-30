@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -22,7 +23,7 @@ export function useSpeechToText(): UseSpeechToTextReturn {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setHasSupport(false);
+      setTimeout(() => setHasSupport(false), 0);
       return;
     }
 
