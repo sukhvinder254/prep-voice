@@ -15,6 +15,8 @@ interface InterviewData {
   role: string;
   level: string;
   interviewType: string;
+  jobDescriptionUsed?: boolean;
+  keySkills: string[];
   questions: InterviewQuestion[];
 }
 
@@ -34,13 +36,19 @@ export default function GenerateInterviewPage() {
       const company = sessionStorage.getItem("prepvoice_company");
       const role = sessionStorage.getItem("prepvoice_role");
       const level = sessionStorage.getItem("prepvoice_level");
+
       const interviewType = sessionStorage.getItem(
         "prepvoice_interview_type"
       );
+
       const questionCount = sessionStorage.getItem(
         "prepvoice_question_count"
       );
+
       const duration = sessionStorage.getItem("prepvoice_duration");
+
+      const jobDescription =
+        sessionStorage.getItem("prepvoice_job_description") || "";
 
       if (
         !company ||
@@ -67,6 +75,7 @@ export default function GenerateInterviewPage() {
           interviewType,
           questionCount: Number(questionCount),
           duration: Number(duration),
+          jobDescription,
         }),
       });
 
@@ -94,6 +103,7 @@ export default function GenerateInterviewPage() {
     const timer = setTimeout(() => {
       void generateInterview();
     }, 0);
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -135,7 +145,7 @@ export default function GenerateInterviewPage() {
             </h2>
 
             <p className="mt-2 text-sm text-gray-500">
-              Gemini AI is preparing personalised interview questions.
+              Gemini AI is analysing your job description and preparing personalised questions.
             </p>
           </div>
         )}
@@ -148,9 +158,7 @@ export default function GenerateInterviewPage() {
               Interview Generation Failed
             </h2>
 
-            <p className="mt-3 text-sm text-gray-500">
-              {error}
-            </p>
+            <p className="mt-3 text-sm text-gray-500">{error}</p>
 
             <button
               onClick={generateInterview}
@@ -184,17 +192,55 @@ export default function GenerateInterviewPage() {
               </div>
             </div>
 
+            {interview.jobDescriptionUsed && (
+              <div className="mt-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+                <p className="text-sm font-semibold text-green-800">
+                  ✓ Job Description-Based Preparation
+                </p>
+                <p className="mt-1 text-xs text-green-700">
+                  Your questions are tailored to the job requirements you provided.
+                </p>
+              </div>
+            )}
+
+            {interview.keySkills?.length > 0 && (
+              <section className="mt-7 rounded-2xl border border-purple-100 bg-purple-50/60 p-5">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Key Skills Identified
+                </h3>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Skills and technologies relevant to this interview.
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {interview.keySkills.map((skill, index) => (
+                    <span
+                      key={`${skill}-${index}`}
+                      className="rounded-full border border-purple-200 bg-white px-4 py-2 text-sm font-semibold text-purple-700"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {[
                 ["Interview Type", interview.interviewType],
                 ["Total Questions", String(interview.questions.length)],
-                ["Duration", `${sessionStorage.getItem("prepvoice_duration") || "—"} min`],
+                [
+                  "Duration",
+                  `${sessionStorage.getItem("prepvoice_duration") || "—"} min`,
+                ],
               ].map(([label, value]) => (
                 <div
                   key={label}
                   className="rounded-xl border border-purple-100 bg-white p-4"
                 >
                   <p className="text-xs text-gray-400">{label}</p>
+
                   <p className="mt-2 text-sm font-bold text-gray-800">
                     {value}
                   </p>
@@ -250,7 +296,7 @@ export default function GenerateInterviewPage() {
               </p>
 
               <p className="mt-2 text-sm text-purple-600">
-                Your selected company and role have been used to personalise these questions.
+                Your selected company, role and job requirements have been used to personalise these questions.
               </p>
             </div>
           </div>

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AnalyticsChart from "./AnalyticsChart";
+import SkillDNA from "./SkillDNA";
+import AIActionPlan from "./AIActionPlan";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,12 @@ interface InterviewRecord {
   role: string | null;
   score: number | string | null;
   created_at: string;
+  feedback: {
+    relevance?: number | string | null;
+    structure?: number | string | null;
+    completeness?: number | string | null;
+    technicalAccuracy?: number | string | null;
+  } | string | null;
 }
 
 export default async function AnalyticsPage() {
@@ -26,7 +34,7 @@ export default async function AnalyticsPage() {
 
   const { data, error } = await supabase
     .from("interview_history")
-    .select("id, question, category, role, score, created_at")
+    .select("id, question, category, role, score, created_at, feedback")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 
@@ -41,6 +49,7 @@ export default async function AnalyticsPage() {
     role: item.role,
     score: item.score,
     created_at: item.created_at,
+    feedback: item.feedback,
   }));
 
   const validInterviews = interviews.filter(
@@ -93,7 +102,9 @@ export default async function AnalyticsPage() {
   return (
     <main className="min-h-screen bg-[#f8f7ff] px-6 py-8 text-gray-800 md:px-10">
       <header className="mb-8">
-        <p className="text-sm font-semibold text-purple-600">PREPVOICE AI</p>
+        <p className="text-sm font-semibold text-purple-600">
+          PREPVOICE AI
+        </p>
         <h1 className="mt-2 text-3xl font-bold">Your Analytics</h1>
         <p className="mt-2 text-gray-500">
           Track your interview performance and improvement.
@@ -109,7 +120,9 @@ export default async function AnalyticsPage() {
       <section className="grid gap-5 sm:grid-cols-3">
         <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
           <p className="text-sm text-gray-500">Total Interviews</p>
-          <h2 className="mt-3 text-3xl font-bold text-purple-700">{total}</h2>
+          <h2 className="mt-3 text-3xl font-bold text-purple-700">
+            {total}
+          </h2>
         </div>
 
         <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
@@ -132,8 +145,15 @@ export default async function AnalyticsPage() {
         <AnalyticsChart data={chartData} />
       </section>
 
+      {/* Skill DNA */}
+      <SkillDNA interviews={validInterviews} />
+      <AIActionPlan interviews={validInterviews} />
+      
+
       <section className="mt-8 rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-xl font-bold">Category Performance</h2>
+        <h2 className="mb-5 text-xl font-bold">
+          Category Performance
+        </h2>
 
         {categories.length === 0 ? (
           <p className="py-6 text-center text-gray-400">

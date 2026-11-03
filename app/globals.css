@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -300,7 +300,8 @@ a:hover {
 }
 
 @keyframes float-soft {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
 
@@ -310,7 +311,8 @@ a:hover {
 }
 
 @keyframes waveform {
-  0%, 100% {
+  0%,
+  100% {
     transform: scaleY(0.3);
   }
 

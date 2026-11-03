@@ -10,6 +10,7 @@ export default function InterviewSetupPage() {
   const [interviewType, setInterviewType] = useState("Mixed");
   const [questionCount, setQuestionCount] = useState("10");
   const [duration, setDuration] = useState("30");
+  const [jobDescription, setJobDescription] = useState("");
 
   const company =
     typeof window !== "undefined"
@@ -34,6 +35,10 @@ export default function InterviewSetupPage() {
     sessionStorage.setItem("prepvoice_interview_type", interviewType);
     sessionStorage.setItem("prepvoice_question_count", questionCount);
     sessionStorage.setItem("prepvoice_duration", duration);
+    sessionStorage.setItem(
+      "prepvoice_job_description",
+      jobDescription.trim()
+    );
 
     router.push("/company-interview/generate");
   }
@@ -68,6 +73,50 @@ export default function InterviewSetupPage() {
         </div>
 
         <div className="rounded-3xl border border-white bg-white/80 p-5 shadow-[0_12px_45px_rgba(100,70,160,0.09)] backdrop-blur-sm sm:p-9">
+
+          {/* Job Description */}
+          <section className="rounded-2xl border border-purple-200 bg-purple-50/70 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-xl font-bold text-gray-900">
+                🎯 Job Description
+              </h2>
+
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-700">
+                Optional
+              </span>
+            </div>
+
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Paste the job description of the position you are applying for.
+              PrepVoice AI will analyse its skills, responsibilities and
+              requirements to generate targeted interview questions.
+            </p>
+
+            <textarea
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              maxLength={12000}
+              rows={7}
+              placeholder="Paste your job description here...
+
+Example:
+We are looking for a Software Development Engineer Intern.
+Required skills: JavaScript, React, Node.js, SQL...
+Responsibilities: Build web applications, develop APIs..."
+              className="mt-4 w-full resize-y rounded-xl border border-purple-200 bg-white p-4 text-sm leading-6 text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+            />
+
+            <div className="mt-2 flex justify-between gap-3 text-xs text-gray-500">
+              <span>
+                Add the actual job description for more relevant questions.
+              </span>
+              <span className="shrink-0 font-medium">
+                {jobDescription.length}/12000
+              </span>
+            </div>
+          </section>
+
+          <div className="my-8 border-t border-purple-100" />
 
           <section>
             <h2 className="text-xl font-bold text-gray-900">

@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -215,6 +214,16 @@ export default function Home() {
       };
 
       setHistory((previous) => [newEntry, ...previous]);
+
+      // Trigger user learning memory profile update after successful history save
+      try {
+        await fetch("/api/update-memory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (memoryError) {
+        console.error("Learning memory update error:", memoryError);
+      }
     }
   };
 
@@ -678,7 +687,7 @@ export default function Home() {
               <div className="mb-3 flex items-center gap-2">
                 <span className="brand-icon h-8 w-8 rounded-lg">
                   <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-                    <path d="M7 5h10M7 9h10M7 13h7M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5l-4 3v-3H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M7 5h10M7 9h10M7 13h7M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5l-4 3v-3H5a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
                 <div>
