@@ -89,7 +89,7 @@ export default function PreparationPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
 
           <h2 className="text-xl font-bold text-gray-900">
-            Let's plan your preparation
+            Let&apos;s plan your preparation
           </h2>
 
           <p className="mt-2 text-sm text-gray-500">
