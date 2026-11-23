@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -64,55 +63,42 @@ export default async function PreparationPlanDetails({
     : [];
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] px-6 py-10 text-white">
+    <main className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12 text-slate-800">
       <div className="mx-auto max-w-5xl">
-
         <Link
           href="/preparation/history"
-          className="text-sm text-purple-400 hover:text-purple-300"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition mb-6"
         >
-          ← Back to Preparation History
+          <span>← Back to Preparation History</span>
         </Link>
 
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-7">
-          <span className="text-sm font-medium text-purple-400">
-            PERSONALIZED PREPARATION PLAN
-          </span>
-
-          <h1 className="mt-3 text-3xl font-bold">
-            {plan.target_role} Preparation
-          </h1>
-
-          <p className="mt-3 leading-7 text-gray-400">
-            {plan.plan?.overview ||
-              "Your personalized interview preparation roadmap."}
-          </p>
-
-          <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-xl bg-white/[0.04] p-4">
-              <p className="text-sm text-gray-400">Duration</p>
-              <p className="mt-2 text-2xl font-bold">
-                {plan.duration_days} Days
+        <div className="pro-card p-6 sm:p-8 mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                Active Study Roadmap
+              </span>
+              <h1 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                {plan.target_role}
+              </h1>
+              <p className="mt-1 text-xs text-slate-500">
+                {plan.duration_days} Days Plan • Created {new Date(plan.created_at).toLocaleDateString()}
               </p>
             </div>
 
-            <div className="rounded-xl bg-white/[0.04] p-4">
-              <p className="text-sm text-gray-400">Daily Roadmap</p>
-              <p className="mt-2 text-2xl font-bold">
-                {dailyPlan.length} Days
-              </p>
-            </div>
+            <Link
+              href="/preparation"
+              className="pro-btn-secondary text-xs font-bold self-start sm:self-center"
+            >
+              + Create Another Plan
+            </Link>
           </div>
-        </div>
 
-        <div className="mb-5 mt-10">
-          <h2 className="text-2xl font-bold">
-            Your Daily Roadmap
-          </h2>
-
-          <p className="mt-2 text-sm text-gray-400">
-            Complete each task and track your preparation progress.
-          </p>
+          {plan.plan?.overview && (
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+              {plan.plan.overview}
+            </p>
+          )}
         </div>
 
         <TaskChecklist
@@ -120,7 +106,6 @@ export default async function PreparationPlanDetails({
           dailyPlan={dailyPlan}
           initialCompletedTasks={completedTasks}
         />
-
       </div>
     </main>
   );

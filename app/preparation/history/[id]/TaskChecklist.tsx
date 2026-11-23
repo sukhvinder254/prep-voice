@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -70,11 +69,8 @@ export default function TaskChecklist({
       }
     } catch (err) {
       setCompletedTasks(previousTasks);
-
       setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
       );
     } finally {
       setSaving(false);
@@ -83,50 +79,49 @@ export default function TaskChecklist({
 
   return (
     <div>
-      <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+      <div className="mb-6 pro-card p-6">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm text-gray-400">
-            Your Preparation Progress
+          <span className="text-xs font-bold text-slate-700">
+            Roadmap Completion Progress
           </span>
 
-          <span className="font-semibold text-purple-400">
-            {progress}%
+          <span className="text-xs font-extrabold text-blue-700">
+            {progress}% ({completedTasks.length}/{totalTasks} tasks)
           </span>
         </div>
 
-        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-purple-500 transition-all duration-300"
+            className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <p className="mt-3 text-sm text-gray-400">
-          {completedTasks.length} of {totalTasks} tasks completed
-        </p>
+        {error && (
+          <p className="mt-3 text-xs text-rose-600">
+            {error}
+          </p>
+        )}
       </div>
 
-      {error && (
-        <p className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
-          {error}
-        </p>
-      )}
-
-      <div className="space-y-5">
+      <div className="space-y-4">
         {dailyPlan.map((day) => (
           <div
             key={day.day}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+            className="pro-card p-6 space-y-4"
           >
-            <span className="rounded-lg bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300">
-              Day {day.day}
-            </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="rounded-md bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-bold text-blue-700">
+                  Day {day.day}
+                </span>
+                <h3 className="text-sm font-bold text-slate-900">
+                  {day.topic}
+                </h3>
+              </div>
+            </div>
 
-            <h3 className="mt-4 text-xl font-semibold text-white">
-              {day.topic}
-            </h3>
-
-            <div className="mt-5 space-y-4">
+            <div className="space-y-2.5">
               {day.tasks.map((task, index) => {
                 const taskId = `${day.day}-${index}`;
                 const isCompleted = completedTasks.includes(taskId);
@@ -134,21 +129,25 @@ export default function TaskChecklist({
                 return (
                   <label
                     key={taskId}
-                    className="flex cursor-pointer items-start gap-3"
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition ${
+                      isCompleted
+                        ? "border-emerald-200 bg-emerald-50/50"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
+                    }`}
                   >
                     <input
                       type="checkbox"
                       checked={isCompleted}
                       disabled={saving}
                       onChange={() => handleTaskToggle(taskId)}
-                      className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-purple-500"
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
 
                     <span
-                      className={`text-sm leading-6 transition ${
+                      className={`text-xs ${
                         isCompleted
-                          ? "text-gray-500 line-through"
-                          : "text-gray-300"
+                          ? "line-through text-slate-400"
+                          : "text-slate-800 font-medium"
                       }`}
                     >
                       {task}
@@ -158,22 +157,15 @@ export default function TaskChecklist({
               })}
             </div>
 
-            <div className="mt-5 rounded-xl bg-purple-500/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-purple-400">
-                Daily Goal
-              </p>
-
-              <p className="mt-2 text-sm leading-6 text-gray-300">
-                {day.goal}
-              </p>
+            <div className="rounded-lg bg-slate-50 p-3 border border-slate-100 text-xs text-slate-600">
+              <span className="font-bold text-slate-700 block mb-0.5">
+                Target Objective:
+              </span>
+              {day.goal}
             </div>
           </div>
         ))}
       </div>
-
-      <p className="mt-5 text-center text-xs text-gray-500">
-        {saving ? "Saving your progress..." : "Your progress is saved automatically."}
-      </p>
     </div>
   );
 }
