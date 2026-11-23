@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -69,42 +68,39 @@ export default function PreparationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
-
         <div className="mb-8">
-          <p className="text-sm font-semibold text-purple-600">
-            PREPVOICE / PREPARATION
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Strategic Roadmap
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs font-medium text-slate-500">Day-by-Day Milestone Plan</span>
+          </div>
 
-          <h1 className="mt-2 text-3xl font-bold text-gray-900">
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
             Interview Preparation Planner
           </h1>
-
-          <p className="mt-2 text-gray-500">
-            Create a personalized preparation plan for your dream role.
+          <p className="mt-1 text-sm text-slate-500">
+            Generate an adaptive syllabus customized for your target position and preparation window.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-
-          <h2 className="text-xl font-bold text-gray-900">
-            Let&apos;s plan your preparation
+        <div className="pro-card p-6 sm:p-8 space-y-6">
+          <h2 className="text-sm font-bold text-slate-900 pb-3 border-b border-slate-100">
+            Configure Preparation Schedule
           </h2>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Select your target role and preparation timeline.
-          </p>
-
-          <div className="mt-8">
-            <label className="mb-3 block text-sm font-semibold text-gray-800">
-              Select Your Target Role
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-slate-700">
+              Target Specialization Track
             </label>
-
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-white p-4 text-gray-800 outline-none focus:border-purple-500"
+              className="pro-input text-xs"
             >
               {roles.map((item) => (
                 <option key={item} value={item}>
@@ -114,51 +110,35 @@ export default function PreparationPage() {
             </select>
           </div>
 
-          <div className="mt-8">
-            <label className="mb-3 block text-sm font-semibold text-gray-800">
-              Preparation Duration
+          <div>
+            <label className="mb-2 block text-xs font-bold text-slate-700">
+              Study Timeline Duration
             </label>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {durations.map((days) => {
+                const isSelected = duration === days;
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {durations.map((days) => (
-                <button
-                  key={days}
-                  type="button"
-                  onClick={() => setDuration(days)}
-                  className={`rounded-xl border p-5 text-center transition ${
-                    duration === days
-                      ? "border-purple-600 bg-purple-50 text-purple-700"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-purple-300"
-                  }`}
-                >
-                  <span className="block text-2xl font-bold">
-                    {days}
-                  </span>
-
-                  <span className="mt-1 block text-sm">
-                    Days
-                  </span>
-                </button>
-              ))}
+                return (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => setDuration(days)}
+                    className={`rounded-xl border p-4 text-center transition ${
+                      isSelected
+                        ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-xs ring-1 ring-indigo-600"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <span className="block text-2xl font-extrabold">{days}</span>
+                    <span className="text-xs font-medium">Days Plan</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="mt-8 rounded-xl bg-purple-50 p-5">
-            <p className="text-sm font-semibold text-purple-800">
-              Your Preparation Plan
-            </p>
-
-            <p className="mt-2 text-sm text-purple-700">
-              Target Role: {role}
-            </p>
-
-            <p className="mt-1 text-sm text-purple-700">
-              Duration: {duration} Days
-            </p>
-          </div>
-
           {error && (
-            <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
               {error}
             </div>
           )}
@@ -167,99 +147,78 @@ export default function PreparationPage() {
             type="button"
             onClick={generatePlan}
             disabled={loading}
-            className="mt-8 w-full rounded-xl bg-purple-600 px-6 py-4 font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="pro-btn-primary w-full text-xs font-bold"
           >
-            {loading ? "Generating Your Plan..." : "Generate My Preparation Plan"}
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Synthesizing Day-by-Day Preparation Plan...
+              </>
+            ) : (
+              "Generate Personalized Study Roadmap →"
+            )}
           </button>
-
         </div>
 
         {plan && (
-          <div className="mt-8">
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-              <p className="text-sm font-semibold text-purple-600">
-                YOUR PERSONALIZED PLAN
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold text-gray-900">
-                {role} Preparation
+          <div className="mt-8 space-y-6 animate-fade-up">
+            <div className="pro-card p-6 sm:p-8">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded border border-indigo-100">
+                Curriculum Blueprint
+              </span>
+              <h2 className="mt-2 text-xl font-bold text-slate-900">
+                {role} Study Strategy
               </h2>
-
-              <p className="mt-4 text-gray-600">
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">
                 {plan.overview}
               </p>
 
-              <div className="mt-6 flex gap-4">
-                <div className="rounded-xl bg-purple-50 px-5 py-4">
-                  <p className="text-2xl font-bold text-purple-700">
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:w-80">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <p className="text-2xl font-extrabold text-indigo-700">
                     {plan.dailyPlan.length}
                   </p>
-                  <p className="text-sm text-gray-600">Preparation Days</p>
+                  <p className="text-[11px] text-slate-500 font-medium">Structured Days</p>
                 </div>
-
-                <div className="rounded-xl bg-purple-50 px-5 py-4">
-                  <p className="text-2xl font-bold text-purple-700">
-                    {plan.dailyPlan.reduce(
-                      (total, day) => total + day.tasks.length,
-                      0
-                    )}
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <p className="text-2xl font-extrabold text-indigo-700">
+                    {plan.dailyPlan.reduce((acc, curr) => acc + curr.tasks.length, 0)}
                   </p>
-                  <p className="text-sm text-gray-600">Total Tasks</p>
+                  <p className="text-[11px] text-slate-500 font-medium">Actionable Tasks</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="space-y-3.5">
               {plan.dailyPlan.map((day) => (
-                <div
-                  key={day.day}
-                  className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-lg bg-purple-100 px-3 py-2 text-sm font-bold text-purple-700">
+                <div key={day.day} className="pro-card p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="rounded-md bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
                       Day {day.day}
                     </span>
-
-                    <h3 className="text-lg font-bold text-gray-900">
-                      {day.topic}
-                    </h3>
+                    <h3 className="text-sm font-bold text-slate-900">{day.topic}</h3>
                   </div>
 
-                  <div className="mt-5">
-                    <p className="text-sm font-semibold text-gray-800">
-                      Daily Tasks
-                    </p>
-
-                    <ul className="mt-3 space-y-3">
-                      {day.tasks.map((task, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-3 text-sm text-gray-600"
-                        >
-                          <span className="mt-0.5 text-purple-600">
-                            •
-                          </span>
-                          {task}
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="space-y-1.5 pl-1">
+                    {day.tasks.map((task, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span>{task}</span>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="mt-5 rounded-xl bg-purple-50 p-4">
-                    <p className="text-xs font-semibold uppercase text-purple-700">
-                      Daily Goal
-                    </p>
-
-                    <p className="mt-2 text-sm text-gray-700">
-                      {day.goal}
-                    </p>
+                  <div className="mt-3.5 rounded-lg bg-slate-50/80 border border-slate-100 p-2.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Day Target
+                    </span>
+                    <p className="mt-0.5 text-xs font-medium text-slate-800">{day.goal}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

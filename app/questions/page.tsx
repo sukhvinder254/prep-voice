@@ -1,63 +1,59 @@
-
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 const questionCategories = [
   {
     name: "Technical",
-    icon: "💻",
-    description: "Programming, DSA, DBMS, OOP and more",
-    color: "bg-purple-100",
+    short: "Tech",
+    description: "Data structures, algorithms, system design, databases, and OOP paradigms",
     questions: [
       "What is the difference between let, const and var in JavaScript?",
-      "Explain the concept of Object-Oriented Programming.",
-      "What is the difference between SQL and NoSQL?",
-      "What is a REST API?",
-      "Explain the time complexity of binary search.",
-      "What is the difference between stack and queue?",
+      "Explain the concept of Object-Oriented Programming and polymorphism.",
+      "What is the architectural difference between SQL and NoSQL databases?",
+      "What is a RESTful API and how does it compare to GraphQL?",
+      "Explain the time complexity and memory characteristics of binary search.",
+      "What is the fundamental difference between stack and queue data structures?",
     ],
   },
   {
-    name: "HR",
-    icon: "🤝",
-    description: "Common HR and personal interview questions",
-    color: "bg-pink-100",
+    name: "HR / Culture",
+    short: "HR",
+    description: "Core behavioral inquiries, self-awareness, motivations, and culture add",
     questions: [
-      "Tell me about yourself.",
-      "What are your greatest strengths?",
-      "What is one weakness you are working on?",
-      "Why should we hire you?",
-      "Where do you see yourself in five years?",
-      "Why do you want to join our company?",
+      "Tell me about yourself and your professional journey so far.",
+      "What are your greatest core technical strengths and how do you leverage them?",
+      "What is one technical weakness you are actively developing?",
+      "Why should our engineering team hire you for this position?",
+      "Where do you envision your career trajectory over the next three to five years?",
+      "Why are you interested in joining our company and working on our mission?",
     ],
   },
   {
-    name: "Behavioural",
-    icon: "🎯",
-    description: "Teamwork, leadership and problem-solving",
-    color: "bg-blue-100",
+    name: "Behavioral & STAR",
+    short: "Behavioral",
+    description: "Conflict resolution, leadership under pressure, cross-functional teamwork",
     questions: [
-      "Tell me about a time you faced a difficult challenge.",
-      "Describe a situation where you worked in a team.",
-      "How do you handle disagreements with teammates?",
-      "Tell me about a time you demonstrated leadership.",
-      "How do you manage deadlines and pressure?",
-      "Describe a mistake you made and what you learned.",
+      "Tell me about a high-stakes technical challenge you faced and how you resolved it.",
+      "Describe a project where you collaborated with difficult stakeholders.",
+      "How do you handle technical disagreements or architectural debates with teammates?",
+      "Describe a time you demonstrated leadership without formal authority.",
+      "How do you prioritize competing deadlines under tight production schedules?",
+      "Describe a critical mistake or bug you introduced and the retrospective lessons learned.",
     ],
   },
   {
-    name: "Role-Based",
-    icon: "🚀",
-    description: "Questions for specific technical roles",
-    color: "bg-amber-100",
+    name: "System & Architecture",
+    short: "Architecture",
+    description: "High-scale engineering, distributed latency, caching, and resiliency",
     questions: [
-      "How would you design a scalable web application?",
-      "Explain the React component lifecycle.",
-      "What happens when you enter a URL in a browser?",
-      "How would you debug a slow API?",
-      "What is the difference between frontend and backend?",
-      "How do you secure a web application?",
+      "How would you design a scalable web application handling 100k requests per second?",
+      "Explain the React component lifecycle and modern concurrent rendering.",
+      "What exact network and rendering steps occur when you enter a URL in a browser?",
+      "How would you diagnose and resolve a severe latency bottleneck in a distributed API?",
+      "What architectural considerations dictate choosing between microservices and monolith?",
+      "How do you ensure end-to-end security, OAuth verification, and data encryption in web apps?",
     ],
   },
 ];
@@ -75,95 +71,120 @@ export default function QuestionsPage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#f8f7ff] p-5 md:p-10">
-      <div className="mx-auto max-w-6xl">
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
         <div className="mb-8">
-          <p className="font-semibold text-purple-700">
-            PREPVOICE WORKSPACE
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold text-gray-900 md:text-4xl">
-            Interview Question Bank
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Curated Curriculum
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs font-medium text-slate-500">24 Industry Standards</span>
+          </div>
+
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Interview Question Repository
           </h1>
-          <p className="mt-2 text-gray-600">
-            Explore questions, prepare smarter and build interview confidence.
+          <p className="mt-1 text-sm text-slate-500">
+            Browse verified interview prompts across technical, behavioral, and architectural domains.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {questionCategories.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => {
-                setSelectedCategory(item.name);
-                setSearch("");
-              }}
-              className={`rounded-2xl border p-5 text-left transition hover:-translate-y-1 hover:shadow-md ${
-                selectedCategory === item.name
-                  ? "border-purple-500 bg-white shadow-md ring-2 ring-purple-200"
-                  : "border-purple-100 bg-white"
-              }`}
-            >
-              <div
-                className={`${item.color} flex h-12 w-12 items-center justify-center rounded-xl text-2xl`}
+        {/* Category Cards */}
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          {questionCategories.map((item) => {
+            const isSelected = selectedCategory === item.name;
+
+            return (
+              <button
+                key={item.name}
+                onClick={() => {
+                  setSelectedCategory(item.name);
+                  setSearch("");
+                }}
+                className={`pro-card p-4.5 text-left transition-all duration-150 ${
+                  isSelected
+                    ? "border-indigo-600 bg-indigo-50/70 shadow-xs ring-1 ring-indigo-600"
+                    : "hover:border-slate-300"
+                }`}
               >
-                {item.icon}
-              </div>
-              <h2 className="mt-4 font-bold text-gray-900">
-                {item.name}
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                {item.description}
-              </p>
-              <p className="mt-3 text-sm font-semibold text-purple-700">
-                {item.questions.length} Questions →
-              </p>
-            </button>
-          ))}
+                <div className="flex items-center justify-between">
+                  <span className="rounded-md bg-white border border-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                    {item.short}
+                  </span>
+                  <span className="text-xs font-bold text-indigo-600">
+                    {item.questions.length} Qs
+                  </span>
+                </div>
+
+                <h2 className="mt-2.5 text-sm font-bold text-slate-900">
+                  {item.name}
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 leading-normal line-clamp-2">
+                  {item.description}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
-        <section className="mt-8 rounded-2xl border border-purple-100 bg-white p-5 shadow-sm md:p-7">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        {/* Active Category Questions */}
+        <section className="mt-8 pro-card p-6 sm:p-7">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center pb-4 border-b border-slate-100">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                {category?.icon} {selectedCategory} Questions
+              <h2 className="text-base font-bold text-slate-900">
+                {selectedCategory} Question Track
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Select a question to prepare your answer.
+              <p className="text-xs text-slate-500">
+                Practice each prompt aloud or load directly into the voice simulator.
               </p>
             </div>
 
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search questions..."
-              className="w-full rounded-xl border border-purple-200 px-4 py-3 text-gray-800 outline-none focus:border-purple-500 md:max-w-xs"
-            />
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search prompt keywords..."
+                className="pro-input text-xs"
+              />
+            </div>
           </div>
 
-          <div className="mt-6 space-y-3">
+          <div className="mt-5 space-y-3">
             {filteredQuestions.length > 0 ? (
               filteredQuestions.map((question, index) => (
                 <div
                   key={question}
-                  className="flex items-start gap-3 rounded-xl bg-purple-50 p-4"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-4 transition-colors hover:bg-slate-50"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-200 text-sm font-bold text-purple-900">
-                    {index + 1}
-                  </span>
-                  <p className="pt-1 font-medium text-gray-800">
-                    {question}
-                  </p>
+                  <div className="flex items-start gap-3 min-w-0">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 text-xs font-bold text-indigo-700">
+                      {index + 1}
+                    </span>
+                    <p className="text-xs font-semibold text-slate-800 leading-relaxed pt-1">
+                      {question}
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/interview"
+                    className="self-end sm:self-auto shrink-0 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition"
+                  >
+                    Practice Aloud →
+                  </Link>
                 </div>
               ))
             ) : (
-              <p className="rounded-xl bg-purple-50 p-6 text-center text-gray-600">
-                No questions found. Try another search.
-              </p>
+              <div className="py-10 text-center text-xs text-slate-500">
+                No questions matching &quot;{search}&quot;. Try adjusting your search term.
+              </div>
             )}
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

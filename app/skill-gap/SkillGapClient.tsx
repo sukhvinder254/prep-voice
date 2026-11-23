@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRef, useState } from "react";
@@ -44,7 +43,7 @@ export default function SkillGapClient() {
     }
 
     if (selectedFile.size > 5 * 1024 * 1024) {
-      setError("File size must be less than 5 MB.");
+      setError("File size must be under 5 MB.");
       setFile(null);
       return;
     }
@@ -54,7 +53,7 @@ export default function SkillGapClient() {
 
   async function handleAnalyze() {
     if (!file) {
-      setError("Please upload your resume first.");
+      setError("Please upload your resume before proceeding.");
       return;
     }
 
@@ -98,62 +97,43 @@ export default function SkillGapClient() {
   const score = Math.min(100, Math.max(0, analysis?.matchScore ?? 0));
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#faf8ff] via-white to-[#f1edff] px-5 py-12 text-gray-800">
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-5xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Role Benchmark
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs font-medium text-slate-500">Resume vs JD Matching</span>
+          </div>
 
-        <div className="mb-12">
-          <p className="mb-3 text-sm font-bold tracking-[0.2em] text-purple-600">
-            PREPVOICE AI
-          </p>
-
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
             AI Skill Gap Analyzer
           </h1>
-
-          <p className="mt-3 max-w-2xl text-base leading-7 text-gray-500">
-            Discover how well your skills match a job role. Compare your
-            resume with a job description and get a personalised roadmap
-            to improve your profile.
+          <p className="mt-1 text-sm text-slate-500 max-w-2xl">
+            Cross-reference your CV with target job specifications to identify missing qualifications, keyword coverage, and an actionable roadmap.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-purple-100 bg-white p-6 shadow-[0_12px_50px_rgba(124,58,237,0.08)] sm:p-10">
-
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100 text-3xl">
-              🎯
-            </div>
-
-            <h2 className="text-2xl font-bold text-gray-900">
-              Analyse Your Job Readiness
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Upload your resume and add the job description.
-            </p>
-          </div>
-
+        {/* Input Station */}
+        <div className="pro-card p-6 sm:p-8 space-y-6">
           <div
             onClick={() => inputRef.current?.click()}
-            className="cursor-pointer rounded-2xl border-2 border-dashed border-purple-200 bg-purple-50/40 px-5 py-10 text-center transition hover:border-purple-400 hover:bg-purple-50"
+            className="cursor-pointer rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-7 text-center transition hover:border-indigo-400 hover:bg-indigo-50/20"
           >
-            <div className="mb-4 text-4xl">📄</div>
-
-            <p className="text-lg font-semibold text-gray-800">
-              Upload Your Resume
-            </p>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Click to select your resume in PDF format
-            </p>
-
-            <div className="mt-5 inline-flex rounded-xl bg-purple-600 px-7 py-3 font-semibold text-white shadow-lg shadow-purple-200">
-              Browse PDF
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-xs">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+              </svg>
             </div>
-
-            <p className="mt-4 text-xs text-gray-400">
-              PDF only · Maximum 5 MB
+            <p className="mt-3 text-xs font-bold text-slate-800">
+              {file ? file.name : "Select or Drop Resume (PDF)"}
             </p>
+            <p className="mt-0.5 text-[11px] text-slate-400">PDF up to 5 MB</p>
 
             <input
               ref={inputRef}
@@ -164,276 +144,166 @@ export default function SkillGapClient() {
             />
           </div>
 
-          {file && (
-            <div className="mt-5 flex flex-col justify-between gap-3 rounded-2xl border border-green-100 bg-green-50 p-4 sm:flex-row sm:items-center">
-              <div className="min-w-0">
-                <p className="font-semibold text-gray-800">
-                  ✓ Resume selected
-                </p>
-                <p className="break-all text-sm text-gray-500">
-                  {file.name}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => {
-                  setFile(null);
-                  setAnalysis(null);
-                  setError("");
-                  if (inputRef.current) inputRef.current.value = "";
-                }}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100 disabled:opacity-50"
-              >
-                Remove
-              </button>
-            </div>
-          )}
-
-          <div className="mt-8">
-            <label className="mb-3 block text-sm font-semibold text-gray-800">
-              Job Description
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-slate-700">
+              Target Job Description
             </label>
-
             <textarea
               value={jobDescription}
-              onChange={(event) => {
-                setJobDescription(event.target.value);
+              onChange={(e) => {
+                setJobDescription(e.target.value);
                 setError("");
                 setAnalysis(null);
               }}
-              rows={8}
+              rows={7}
               maxLength={12000}
-              placeholder="Paste the complete job description here...
-
-Example:
-We are looking for a Software Development Engineer Intern with knowledge of Python, JavaScript, React, Node.js, SQL, Data Structures and Algorithms..."
-              className="w-full resize-y rounded-2xl border border-purple-200 bg-white p-4 text-sm leading-7 text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+              placeholder="Paste job posting details here..."
+              className="pro-input text-xs"
             />
-
-            <p className="mt-2 text-right text-xs text-gray-400">
+            <p className="mt-1 text-right text-[11px] text-slate-400">
               {jobDescription.length}/12000 characters
             </p>
           </div>
 
           {error && (
-            <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
               {error}
-            </p>
+            </div>
           )}
 
           <button
             type="button"
             onClick={handleAnalyze}
             disabled={loading || !file || jobDescription.trim().length < 50}
-            className="mt-7 w-full rounded-xl bg-purple-600 px-6 py-4 font-semibold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="pro-btn-primary w-full text-xs font-bold"
           >
-            {loading ? "Analysing Your Skills..." : "Analyse My Skill Gap →"}
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Auditing Skill Coverage with Gemini...
+              </>
+            ) : (
+              "Compute Skill Match & Gap Analysis →"
+            )}
           </button>
-
-          {loading && (
-            <p className="mt-4 text-center text-sm text-purple-600">
-              AI is comparing your resume with the job requirements. Please wait...
-            </p>
-          )}
-
-          <div className="mt-8 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 p-5">
-            <h3 className="font-semibold text-purple-900">
-              What you will get
-            </h3>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-800">
-                  01. Skill Match
-                </p>
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  See which required skills you already have.
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-gray-800">
-                  02. Skill Gaps
-                </p>
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Identify skills that need improvement.
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-gray-800">
-                  03. Roadmap
-                </p>
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Get actionable steps to improve your profile.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
+        {/* Results Section */}
         {analysis && (
-          <div className="mt-10 space-y-6">
-
-            <div className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm sm:p-8">
-              <p className="text-sm font-bold uppercase tracking-wider text-purple-600">
-                Your Skill Match Score
-              </p>
-
-              <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row">
+          <div className="mt-8 space-y-6 animate-fade-up">
+            {/* Match Score Card */}
+            <div className="pro-card p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div
-                  className="flex h-36 w-36 shrink-0 items-center justify-center rounded-full"
+                  className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full"
                   style={{
-                    background: `conic-gradient(#7c3aed ${score * 3.6}deg, #ede9fe 0deg)`,
+                    background: `conic-gradient(#4f46e5 ${score * 3.6}deg, #e2e8f0 0deg)`,
                   }}
                 >
-                  <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-inner">
                     <div className="text-center">
-                      <p className="text-3xl font-extrabold text-gray-900">
-                        {score}%
-                      </p>
-                      <p className="text-xs text-gray-500">Match</p>
+                      <p className="text-2xl font-extrabold text-slate-900">{score}%</p>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase">Match</p>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Your Job Readiness Overview
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded border border-indigo-100">
+                    JD Alignment Diagnostic
+                  </span>
+                  <h2 className="mt-1.5 text-lg font-bold text-slate-900">
+                    Readiness Evaluation Overview
                   </h2>
-                  <p className="mt-3 leading-7 text-gray-600">
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
                     {analysis.summary}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-3">
-              <div className="rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
-                <p className="text-sm font-semibold text-green-700">
-                  Matched Skills
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {analysis.matchedSkills.length}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Skills clearly found in your resume
-                </p>
+            {/* Counts Breakdown */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="pro-card p-5 border-emerald-200/90 bg-emerald-50/40">
+                <span className="text-xs font-bold text-emerald-800">Direct Matches</span>
+                <p className="mt-2 text-3xl font-extrabold text-emerald-900">{analysis.matchedSkills.length}</p>
+                <p className="mt-0.5 text-[11px] text-emerald-700">Demonstrated in resume</p>
               </div>
 
-              <div className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
-                <p className="text-sm font-semibold text-amber-700">
-                  Partially Matched
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {analysis.partialSkills.length}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Skills needing stronger evidence
-                </p>
+              <div className="pro-card p-5 border-amber-200/90 bg-amber-50/40">
+                <span className="text-xs font-bold text-amber-800">Partial Coverage</span>
+                <p className="mt-2 text-3xl font-extrabold text-amber-900">{analysis.partialSkills.length}</p>
+                <p className="mt-0.5 text-[11px] text-amber-700">Requires stronger evidence</p>
               </div>
 
-              <div className="rounded-3xl border border-red-100 bg-white p-6 shadow-sm">
-                <p className="text-sm font-semibold text-red-700">
-                  Missing Skills
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {analysis.missingSkills.length}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Skills not demonstrated in your resume
-                </p>
+              <div className="pro-card p-5 border-rose-200/90 bg-rose-50/40">
+                <span className="text-xs font-bold text-rose-800">Critical Gaps</span>
+                <p className="mt-2 text-3xl font-extrabold text-rose-900">{analysis.missingSkills.length}</p>
+                <p className="mt-0.5 text-[11px] text-rose-700">Missing from CV</p>
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
+            {/* Skill Lists */}
+            <div className="grid gap-5 md:grid-cols-3">
               <SkillList
-                title="Matched Skills"
+                title="Matched Competencies"
                 skills={analysis.matchedSkills}
                 color="green"
-                emptyText="No clearly matched skills identified."
+                emptyText="No direct keyword matches."
               />
-
               <SkillList
-                title="Partially Matched"
+                title="Partial / Adjoining"
                 skills={analysis.partialSkills}
                 color="amber"
-                emptyText="No partial matches identified."
+                emptyText="No partial matches."
               />
-
               <SkillList
-                title="Missing Skills"
+                title="Missing Requirements"
                 skills={analysis.missingSkills}
                 color="red"
-                emptyText="No missing skills identified."
+                emptyText="No critical omissions."
               />
             </div>
 
-            <div className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm sm:p-8">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Your Personalised Learning Roadmap
+            {/* Personalized Learning Roadmap */}
+            <div className="pro-card p-6 sm:p-8">
+              <h2 className="text-sm font-bold text-slate-900 pb-2 border-b border-slate-100">
+                Personalized Remediation Roadmap
               </h2>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Focus on these areas to strengthen your job profile.
-              </p>
-
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 space-y-3">
                 {analysis.learningRoadmap.map((item, index) => (
                   <div
                     key={`${item.skill}-${index}`}
-                    className="rounded-2xl border border-purple-100 p-5"
+                    className="rounded-xl border border-slate-100 bg-slate-50/60 p-4"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h3 className="font-bold text-gray-900">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-slate-900">
                         {index + 1}. {item.skill}
-                      </h3>
-
-                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${
-                        item.priority.toLowerCase() === "high"
-                          ? "bg-red-100 text-red-700"
-                          : item.priority.toLowerCase() === "medium"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-green-100 text-green-700"
-                      }`}>
+                      </span>
+                      <span
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                          item.priority.toLowerCase() === "high"
+                            ? "bg-rose-100 text-rose-800"
+                            : item.priority.toLowerCase() === "medium"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}
+                      >
                         {item.priority} Priority
                       </span>
                     </div>
-
-                    <p className="mt-3 text-sm leading-6 text-gray-600">
-                      {item.reason}
-                    </p>
-
-                    <p className="mt-3 rounded-xl bg-purple-50 p-3 text-sm leading-6 text-purple-800">
-                      <strong>Action:</strong> {item.action}
+                    <p className="mt-1 text-xs text-slate-600">{item.reason}</p>
+                    <p className="mt-2 text-xs font-semibold text-indigo-700 bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-100">
+                      Recommended Action: {item.action}
                     </p>
                   </div>
                 ))}
-
-                {analysis.learningRoadmap.length === 0 && (
-                  <p className="rounded-xl bg-purple-50 p-4 text-sm text-gray-600">
-                    No additional learning actions were suggested.
-                  </p>
-                )}
               </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAnalysis(null);
-                setError("");
-              }}
-              className="w-full rounded-xl border border-purple-200 bg-white px-6 py-4 font-semibold text-purple-700 transition hover:bg-purple-50"
-            >
-              Analyse Another Job Description
-            </button>
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -449,46 +319,26 @@ function SkillList({
   emptyText: string;
 }) {
   const styles = {
-    green: {
-      border: "border-green-100",
-      heading: "text-green-700",
-      pill: "bg-green-50 text-green-700",
-    },
-    amber: {
-      border: "border-amber-100",
-      heading: "text-amber-700",
-      pill: "bg-amber-50 text-amber-700",
-    },
-    red: {
-      border: "border-red-100",
-      heading: "text-red-700",
-      pill: "bg-red-50 text-red-700",
-    },
+    green: "border-emerald-200/80 bg-emerald-50/40 text-emerald-900",
+    amber: "border-amber-200/80 bg-amber-50/40 text-amber-900",
+    red: "border-rose-200/80 bg-rose-50/40 text-rose-900",
   };
 
-  const style = styles[color];
-
   return (
-    <div className={`rounded-3xl border ${style.border} bg-white p-6 shadow-sm`}>
-      <h3 className={`font-bold ${style.heading}`}>
-        {title}
-      </h3>
-
-      <div className="mt-4 flex flex-wrap gap-2">
+    <div className={`pro-card p-5 ${styles[color]}`}>
+      <h3 className="text-xs font-bold mb-3">{title}</h3>
+      <div className="flex flex-wrap gap-1.5">
         {skills.map((skill, index) => (
           <span
             key={`${skill}-${index}`}
-            className={`rounded-full px-3 py-2 text-sm font-medium ${style.pill}`}
+            className="rounded-md bg-white border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-700"
           >
             {skill}
           </span>
         ))}
       </div>
-
       {skills.length === 0 && (
-        <p className="mt-3 text-sm text-gray-500">
-          {emptyText}
-        </p>
+        <p className="text-[11px] text-slate-400 mt-2">{emptyText}</p>
       )}
     </div>
   );

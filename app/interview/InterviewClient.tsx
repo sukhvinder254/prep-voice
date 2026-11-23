@@ -148,7 +148,6 @@ export default function Home() {
 
     if (authError || !user) {
       console.error("Unable to save history:", authError?.message);
-      alert("History save karne ke liye pehle login karein.");
       return;
     }
 
@@ -158,83 +157,73 @@ export default function Home() {
       Math.min(10, rawScore > 10 ? Math.round(rawScore / 10) : rawScore)
     );
 
-    const feedbackDetails = {
-      relevance: Number(newFeedback?.relevance ?? 0),
-      completeness: Number(newFeedback?.completeness ?? 0),
-      structure: Number(newFeedback?.structure ?? 0),
-      technicalAccuracy: Number(newFeedback?.technicalAccuracy ?? 0),
-      strengths: newFeedback?.strengths ?? "",
-      improvements: newFeedback?.improvements ?? "",
-      sampleAnswer: newFeedback?.sampleAnswer ?? "",
-      followUpQuestion: newFeedback?.followUpQuestion ?? "",
-      communicationTip: newFeedback?.communicationTip ?? "",
-    };
-
     const { data, error } = await supabase
       .from("interview_history")
       .insert({
         user_id: user.id,
-        role: category,
         question: questionText,
-        category,
+        category: category,
+        answer: answerText,
+        feedback: newFeedback,
         score: scoreValue,
-        feedback: feedbackDetails,
-        transcript: { answer: answerText },
       })
       .select()
       .single();
 
     if (error) {
-      console.error("History saving error:", error.message);
-      alert("Interview feedback mila, lekin history save nahi hui.");
+      console.error("Database save error:", error.message);
       return;
     }
 
     if (data) {
-      const newEntry: HistoryItem = {
+      const newItem: HistoryItem = {
         id: data.id,
         question: data.question ?? questionText,
         category: data.category ?? category,
         score: Number(data.score ?? scoreValue),
-        relevance: Number(data.feedback?.relevance ?? 0),
-        completeness: Number(data.feedback?.completeness ?? 0),
-        structure: Number(data.feedback?.structure ?? 0),
-        technicalAccuracy: Number(
-          data.feedback?.technicalAccuracy ?? 0
-        ),
+        relevance: Number(newFeedback?.relevance ?? 0),
+        completeness: Number(newFeedback?.completeness ?? 0),
+        structure: Number(newFeedback?.structure ?? 0),
+        technicalAccuracy: Number(newFeedback?.technicalAccuracy ?? 0),
         timestamp: new Date(data.created_at).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        strengths: data.feedback?.strengths ?? "",
-        improvements: data.feedback?.improvements ?? "",
-        sampleAnswer: data.feedback?.sampleAnswer ?? "",
-        followUpQuestion: data.feedback?.followUpQuestion ?? "",
-        communicationTip: data.feedback?.communicationTip ?? "",
+        strengths: newFeedback?.strengths ?? "",
+        improvements: newFeedback?.improvements ?? "",
+        sampleAnswer: newFeedback?.sampleAnswer ?? "",
+        followUpQuestion: newFeedback?.followUpQuestion ?? "",
+        communicationTip: newFeedback?.communicationTip ?? "",
       };
 
-      setHistory((previous) => [newEntry, ...previous]);
+      setHistory((prev) => [newItem, ...prev]);
 
-      // Trigger user learning memory profile update after successful history save
       try {
         await fetch("/api/update-memory", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            interviewData: {
+              category: data.category ?? category,
+              question: data.question ?? questionText,
+              score: Number(data.score ?? scoreValue),
+              feedback: newFeedback,
+            },
+          }),
         });
-      } catch (memoryError) {
-        console.error("Learning memory update error:", memoryError);
+      } catch (memErr) {
+        console.error("Failed to update memory profile:", memErr);
       }
     }
   };
 
   const clearHistory = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to clear your interview history?"
-      )
-    ) {
-      return;
-    }
+    const confirmClear = window.confirm(
+      "Are you sure you want to clear your local interview history?"
+    );
+
+    if (!confirmClear) return;
 
     const {
       data: { user },
@@ -242,7 +231,7 @@ export default function Home() {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      alert("Please log in to manage your history.");
+      alert("Please sign in to clear history.");
       return;
     }
 
@@ -252,19 +241,12 @@ export default function Home() {
       .eq("user_id", user.id);
 
     if (error) {
-      console.error("History deletion error:", error.message);
-      alert("History clear nahi hui. Please try again.");
+      console.error("History clear error:", error.message);
+      alert("Failed to clear database history.");
       return;
     }
 
     setHistory([]);
-  };
-
-  const stopSpeaking = () => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    }
   };
 
   const handleSelectQuestion = (index: number) => {
@@ -273,8 +255,7 @@ export default function Home() {
       setIsRecording(false);
     }
 
-    if (isSpeaking) stopSpeaking();
-
+    stopSpeaking();
     setIsCustomMode(false);
     setSelectedQuestionIndex(index);
     setTranscript("");
@@ -282,85 +263,50 @@ export default function Home() {
   };
 
   const handleNextQuestion = () => {
-    handleSelectQuestion((selectedQuestionIndex + 1) % QUESTIONS.length);
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    }
+
+    stopSpeaking();
+    setIsCustomMode(false);
+    setSelectedQuestionIndex((prev) => (prev + 1) % QUESTIONS.length);
+    setTranscript("");
+    setFeedback(null);
   };
 
-  const handleStart = () => {
-    if (isCustomMode && !customQuestionText.trim()) {
-      alert("Pehle apna custom question enter karein!");
-      return;
+  const stopSpeaking = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
     }
-
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert(
-        "Speech Recognition is not supported in this browser. Try Chrome."
-      );
-      return;
-    }
-
-    setFeedback(null);
-    setTranscript("");
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-
-    recognition.onresult = (event: any) => {
-      let finalTranscript = "";
-
-      for (let i = 0; i < event.results.length; i++) {
-        finalTranscript += event.results[i][0].transcript;
-      }
-
-      setTranscript(finalTranscript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => setIsRecording(false);
-
-    recognitionRef.current = recognition;
-
-    try {
-      recognition.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Unable to start recording:", error);
-      alert("Recording start nahi ho paayi. Please try again.");
-    }
+    setIsSpeaking(false);
   };
 
   const speakFeedback = (data: any) => {
-    if (!("speechSynthesis" in window)) {
-      alert("Voice playback is not supported in this browser.");
-      return;
-    }
+    if (!("speechSynthesis" in window) || !data) return;
 
     window.speechSynthesis.cancel();
 
-    const score = data?.score ?? 0;
-    const strengths = Array.isArray(data?.strengths)
-      ? data.strengths.join(". ")
-      : data?.strengths || "No specific strengths recorded.";
-
-    const improvements = Array.isArray(data?.improvements)
-      ? data.improvements.join(". ")
-      : data?.improvements || "No specific improvements recorded.";
-
-    const utterance = new SpeechSynthesisUtterance(
-      `Your score is ${score} out of 10. What worked: ${strengths}. Work on this next: ${improvements}`
+    const rawScore = Number(data.score ?? 0);
+    const scoreVal = Math.max(
+      0,
+      Math.min(10, rawScore > 10 ? Math.round(rawScore / 10) : rawScore)
     );
 
-    utterance.lang = "en-US";
-    utterance.rate = 1;
+    const strengthsText = Array.isArray(data.strengths)
+      ? data.strengths.join(". ")
+      : data.strengths || "";
+
+    const improvementsText = Array.isArray(data.improvements)
+      ? data.improvements.join(". ")
+      : data.improvements || "";
+
+    const textToSpeak = `Your overall score is ${scoreVal} out of 10. Strengths: ${strengthsText}. Areas to improve: ${improvementsText}.`;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -368,34 +314,79 @@ export default function Home() {
     window.speechSynthesis.speak(utterance);
   };
 
+  const handleStart = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert(
+        "Speech Recognition is not supported by your browser. Please use Google Chrome or Microsoft Edge."
+      );
+      return;
+    }
+
+    stopSpeaking();
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      let fullTranscript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        fullTranscript += event.results[i][0].transcript + " ";
+      }
+      setTranscript(fullTranscript.trim());
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech Recognition Error:", event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    setTranscript("");
+    setFeedback(null);
+    recognition.start();
+    setIsRecording(true);
+  };
+
   const handleStop = async () => {
-    recognitionRef.current?.stop();
-    setIsRecording(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
 
     const answerText = transcript.trim();
 
     if (!answerText) {
-      alert("Kuch bola nahi gaya. Please try again.");
+      alert("No speech detected. Please try recording your answer again.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch("/api/feedback", {
+      const response = await fetch("/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: activeQuestionText,
           answer: answerText,
+          category: activeCategory,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Failed to fetch feedback.");
-        return;
+        throw new Error(data.error || "Evaluation failed");
       }
 
       setFeedback(data);
@@ -410,7 +401,7 @@ export default function Home() {
       speakFeedback(data);
     } catch (error) {
       console.error("Feedback request error:", error);
-      alert("Feedback nahi mil paya. Try again.");
+      alert("Unable to fetch AI evaluation. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -423,7 +414,7 @@ export default function Home() {
         : "";
 
     if (!nextQuestion) {
-      alert("Is answer ke liye follow-up question available nahi hai.");
+      alert("No follow-up question available for this answer.");
       return;
     }
 
@@ -461,7 +452,7 @@ export default function Home() {
       ? feedback.strengths
       : feedback.strengths
         ? [feedback.strengths]
-        : ["No specific strengths recorded."]
+        : ["Clear communication structure."]
     : [];
 
   const improvements = feedback
@@ -469,509 +460,445 @@ export default function Home() {
       ? feedback.improvements
       : feedback.improvements
         ? [feedback.improvements]
-        : ["No specific improvements recorded."]
+        : ["Add more concrete quantitative metrics to validate your impact."]
     : [];
 
   return (
-    <main className="min-h-screen overflow-hidden px-4 py-5 text-[#302748] sm:px-6 sm:py-8 lg:px-8">
-      <div className="pointer-events-none fixed -left-40 top-20 h-96 w-96 rounded-full bg-violet-200/35 blur-3xl" />
-      <div className="pointer-events-none fixed -right-40 top-1/3 h-96 w-96 rounded-full bg-blue-200/35 blur-3xl" />
-
-      <div className="relative mx-auto max-w-7xl">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="brand-icon h-12 w-12">
-              <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
-                <path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
+      {/* Top Header */}
+      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Voice Simulation
             </span>
-            <div>
-              <h1 className="text-xl font-extrabold tracking-tight text-[#302748]">
-                PrepVoice<span className="text-[#8769e9]">.</span>
-              </h1>
-              <p className="text-xs text-[#89829d]">Your personal AI interview coach</p>
-            </div>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs text-slate-500">Gemini 1.5 Real-Time Engine</span>
           </div>
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Voice Interview Studio
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Practice answering aloud with real-time speech telemetry and instant AI evaluation.
+          </p>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden rounded-full border border-white bg-white/75 px-4 py-2 text-sm text-[#716887] shadow-sm sm:block">
-              Welcome, <span className="font-bold text-[#51416f]">{userName || "there"}</span>
-            </div>
-            <button onClick={handleLogout} className="btn-secondary !min-h-10 !px-4 !py-2 text-sm">
-              Sign out
-            </button>
+        <div className="flex items-center gap-3">
+          <div className="hidden rounded-xl border border-slate-200/80 bg-white px-3.5 py-2 text-xs text-slate-600 shadow-2xs sm:block">
+            Signed in as <span className="font-bold text-slate-900">{userName || "Candidate"}</span>
           </div>
-        </header>
+          <button
+            onClick={handleLogout}
+            className="pro-btn-secondary !min-h-9 !px-3.5 !py-1.5 text-xs"
+          >
+            Sign out
+          </button>
+        </div>
+      </header>
 
-        <section className="relative mb-8 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#7960df] via-[#8e75eb] to-[#6ba8f8] p-7 text-white shadow-[0_20px_60px_rgba(124,98,220,0.22)] sm:p-10">
-          <div className="pointer-events-none absolute -right-10 -top-20 h-64 w-64 rounded-full border border-white/20" />
-          <div className="pointer-events-none absolute -right-2 -top-12 h-48 w-48 rounded-full border border-white/20" />
-          <div className="pointer-events-none absolute bottom-0 right-1/4 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-
-          <div className="relative z-10 max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[11px] font-bold tracking-[0.16em] text-white/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              YOUR PRACTICE SPACE
-            </span>
-            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-              Speak clearly.
-              <br />
-              Show them what you know.
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-white/80 sm:text-base">
-              Practice real interview questions, answer out loud, and get personalized AI feedback to improve with every attempt.
-            </p>
-          </div>
-
-          <div className="relative z-10 mt-7 flex flex-wrap gap-3 text-sm font-semibold sm:absolute sm:bottom-10 sm:right-10 sm:mt-0">
-            <span className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
-              ✦ AI-powered feedback
-            </span>
-            <span className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
-              ♡ Voice practice
-            </span>
-          </div>
-        </section>
-
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)]">
-          <section className="premium-card min-w-0 p-5 sm:p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="eyebrow">LET&apos;S GET PRACTICING</p>
-                <h2 className="section-title mt-2">Your interview room</h2>
-                <p className="mt-2 text-sm leading-6 text-[#8b849f]">
-                  Choose a question and answer it in your own words.
-                </p>
-              </div>
-              <span className="rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700">
-                {QUESTIONS.length} practice questions
+      {/* Main Studio Grid */}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)]">
+        {/* Left Side: Interactive Voice Chamber */}
+        <section className="pro-card p-6 sm:p-8">
+          {/* Question Selector Carousel */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Curated Practice Questions
+              </span>
+              <span className="text-xs text-slate-400 font-medium">
+                {QUESTIONS.length} Questions Available
               </span>
             </div>
 
-            <div className="mt-7">
-              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#938ba7]">
-                Choose a question
-              </p>
-              <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2">
-                {QUESTIONS.map((question, index) => (
-                  <button
-                    key={question.id}
-                    onClick={() => handleSelectQuestion(index)}
-                    className={`shrink-0 rounded-xl border px-4 py-2.5 text-xs font-semibold transition-all duration-200 ${
-                      !isCustomMode && selectedQuestionIndex === index
-                        ? "border-violet-300 bg-gradient-to-r from-violet-100 to-blue-50 text-violet-800 shadow-sm"
-                        : "border-[#eeeaf6] bg-white text-[#817993] hover:border-violet-200 hover:bg-violet-50/60"
-                    }`}
-                  >
-                    Q{index + 1} · {question.category}
-                  </button>
-                ))}
+            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2">
+              {QUESTIONS.map((question, index) => (
                 <button
-                  onClick={() => {
-                    if (isRecording) {
-                      recognitionRef.current?.stop();
-                      setIsRecording(false);
-                    }
-                    setIsCustomMode(true);
-                    setTranscript("");
-                    setFeedback(null);
-                  }}
-                  className={`shrink-0 rounded-xl border px-4 py-2.5 text-xs font-semibold transition-all ${
-                    isCustomMode
-                      ? "border-violet-300 bg-violet-100 text-violet-800"
-                      : "border-[#eeeaf6] bg-white text-[#817993] hover:border-violet-200 hover:bg-violet-50"
+                  key={question.id}
+                  onClick={() => handleSelectQuestion(index)}
+                  className={`shrink-0 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all duration-150 ${
+                    !isCustomMode && selectedQuestionIndex === index
+                      ? "border-indigo-600 bg-indigo-600 text-white shadow-xs"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  + Custom question
+                  Q{index + 1} · {question.category}
                 </button>
-              </div>
+              ))}
+              <button
+                onClick={() => {
+                  if (isRecording) {
+                    recognitionRef.current?.stop();
+                    setIsRecording(false);
+                  }
+                  setIsCustomMode(true);
+                  setTranscript("");
+                  setFeedback(null);
+                }}
+                className={`shrink-0 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
+                  isCustomMode
+                    ? "border-indigo-600 bg-indigo-600 text-white shadow-xs"
+                    : "border-dashed border-slate-300 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600"
+                }`}
+              >
+                + Custom Question
+              </button>
             </div>
+          </div>
 
-            <div className="mt-5 rounded-2xl border border-[#eeeaf8] bg-gradient-to-br from-[#faf8ff] to-[#f5f8ff] p-5 sm:p-6">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="rounded-full border border-violet-100 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-700">
-                  {activeCategory}
-                </span>
-                {!isCustomMode && (
-                  <button
-                    onClick={handleNextQuestion}
-                    className="text-xs font-bold text-violet-600 transition hover:text-violet-800"
-                  >
-                    Next question →
-                  </button>
-                )}
-              </div>
-
-              {isCustomMode ? (
-                <textarea
-                  value={customQuestionText}
-                  onChange={(event) => setCustomQuestionText(event.target.value)}
-                  placeholder="Type or paste your interview question here..."
-                  rows={3}
-                  className="premium-input resize-y"
-                />
-              ) : (
-                <p className="text-lg font-bold leading-8 tracking-tight text-[#352b4c] sm:text-xl">
-                  {activeQuestionText}
-                </p>
+          {/* Active Question Display Card */}
+          <div className="mt-5 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-indigo-50/20 p-5 sm:p-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="rounded-md bg-indigo-100/70 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-indigo-700">
+                {activeCategory}
+              </span>
+              {!isCustomMode && (
+                <button
+                  onClick={handleNextQuestion}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition"
+                >
+                  Next Scenario →
+                </button>
               )}
             </div>
 
-            <div className="my-7 rounded-2xl border border-[#f0edf8] bg-white/80 px-5 py-8 text-center sm:py-10">
-              <div className="relative mx-auto flex h-28 w-28 items-center justify-center">
-                {isRecording && (
-                  <>
-                    <span className="absolute inset-0 animate-ping rounded-full bg-violet-200/50" />
-                    <span className="absolute inset-2 rounded-full border border-violet-200" />
-                  </>
-                )}
-                <button
-                  onClick={isRecording ? handleStop : handleStart}
-                  disabled={loading}
-                  aria-label={isRecording ? "Stop recording and evaluate" : "Start recording"}
-                  className={`relative z-10 flex h-24 w-24 items-center justify-center rounded-full shadow-[0_12px_35px_rgba(126,99,219,0.22)] transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    isRecording
-                      ? "bg-gradient-to-br from-rose-400 to-pink-500 text-white"
-                      : "brand-icon"
-                  }`}
-                >
-                  {isRecording ? (
-                    <span className="flex h-6 items-center gap-1">
-                      {[0, 1, 2, 3, 4].map((index) => (
-                        <span
-                          key={index}
-                          className="waveform-bar h-full w-1 rounded-full bg-white animate-bounce"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        />
-                      ))}
-                    </span>
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8" aria-hidden="true">
-                      <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.8" />
-                      <path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3m-4 0h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+            {isCustomMode ? (
+              <textarea
+                value={customQuestionText}
+                onChange={(e) => setCustomQuestionText(e.target.value)}
+                placeholder="Type or paste any interview question here..."
+                rows={3}
+                className="pro-input resize-y text-sm"
+              />
+            ) : (
+              <h2 className="text-lg font-bold leading-relaxed tracking-tight text-slate-900 sm:text-xl">
+                {activeQuestionText}
+              </h2>
+            )}
+          </div>
 
-              <h3 className="mt-5 text-base font-extrabold text-[#3b3154]">
-                {loading
-                  ? "Your coach is thinking..."
-                  : isRecording
-                    ? "Listening to your answer"
-                    : "Ready when you are"}
-              </h3>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#928ba4]">
-                {loading
-                  ? "Analyzing your response and preparing personalized feedback."
-                  : isRecording
-                    ? "Speak naturally. Tap the button when you finish."
-                    : "Tap the microphone and answer the question out loud."}
-              </p>
-
+          {/* Recording Microphone Station */}
+          <div className="my-7 rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs">
+            <div className="relative mx-auto flex h-28 w-28 items-center justify-center">
               {isRecording && (
-                <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />
-                  Recording in progress
-                </span>
+                <>
+                  <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/20" />
+                  <span className="absolute inset-1 rounded-full border-2 border-rose-300 animate-pulse" />
+                </>
               )}
-
-              {loading && (
-                <div className="mx-auto mt-5 h-1.5 max-w-xs overflow-hidden rounded-full bg-violet-100">
-                  <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-blue-400" />
-                </div>
-              )}
+              <button
+                onClick={isRecording ? handleStop : handleStart}
+                disabled={loading}
+                aria-label={isRecording ? "Stop recording and evaluate" : "Start recording"}
+                className={`relative z-10 flex h-24 w-24 items-center justify-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isRecording
+                    ? "bg-rose-600 text-white shadow-lg shadow-rose-500/30"
+                    : "bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25"
+                }`}
+              >
+                {isRecording ? (
+                  <span className="flex h-7 items-center gap-1">
+                    {[0, 1, 2, 3, 4].map((index) => (
+                      <span
+                        key={index}
+                        className="waveform-bar h-full w-1 rounded-full bg-white animate-bounce"
+                        style={{ animationDelay: `${index * 120}ms` }}
+                      />
+                    ))}
+                  </span>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
+                    <path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3m-4 0h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                )}
+              </button>
             </div>
 
-            <div className="rounded-2xl border border-[#eeeaf6] bg-[#fcfbff] p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="brand-icon h-8 w-8 rounded-lg">
-                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-                    <path d="M7 5h10M7 9h10M7 13h7M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5l-4 3v-3H5a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <h3 className="mt-5 text-base font-bold text-slate-900">
+              {loading
+                ? "Evaluating Your Response..."
+                : isRecording
+                ? "Recording Active — Listening to your answer"
+                : "Microphone Ready"}
+            </h3>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+              {loading
+                ? "Analyzing structure, technical depth, and speech metrics."
+                : isRecording
+                ? "Speak clearly and naturally. Press the red button when finished."
+                : "Click the microphone button to start answering out loud."}
+            </p>
+
+            {isRecording && (
+              <span className="mt-3.5 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 border border-rose-200">
+                <span className="h-2 w-2 rounded-full bg-rose-600 animate-pulse" />
+                Live Audio Stream Active
+              </span>
+            )}
+
+            {loading && (
+              <div className="mx-auto mt-4 h-1.5 max-w-xs overflow-hidden rounded-full bg-indigo-100">
+                <div className="h-full w-1/2 animate-pulse rounded-full bg-indigo-600" />
+              </div>
+            )}
+          </div>
+
+          {/* Real-time Transcription Teleprompter */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
+                </div>
+                <span className="text-xs font-bold text-slate-800">Spoken Answer Transcript</span>
+              </div>
+              <span className="text-[11px] text-slate-400">Continuous speech recognition</span>
+            </div>
+            <p className="min-h-12 whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
+              {transcript || (
+                <span className="italic text-slate-400">
+                  Your spoken answer will be transcribed here in real-time as you speak...
                 </span>
+              )}
+            </p>
+          </div>
+
+          {/* AI Feedback & Diagnostic Evaluation Report */}
+          {feedback && !loading && (
+            <section className="mt-8 animate-fade-up border-t border-slate-200/80 pt-6">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-bold text-[#45395e]">Your answer</h3>
-                  <p className="text-[11px] text-[#a19ab2]">Live speech transcription</p>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded border border-indigo-100">
+                    Diagnostic Report
+                  </span>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">
+                    AI Performance Evaluation
+                  </h3>
+                </div>
+                <button
+                  onClick={isSpeaking ? stopSpeaking : () => speakFeedback(feedback)}
+                  className="pro-btn-secondary !min-h-9 !px-3.5 !py-1.5 text-xs font-semibold"
+                >
+                  {isSpeaking ? "■ Stop Audio Voice" : "▶ Read Feedback Aloud"}
+                </button>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-[180px_1fr]">
+                {/* Overall Score Meter */}
+                <div className="pro-card flex flex-col items-center justify-center p-5 text-center">
+                  <div className="relative h-28 w-28">
+                    <svg viewBox="0 0 100 100" className="-rotate-90 h-full w-full">
+                      <circle cx="50" cy="50" r="42" stroke="#e2e8f0" strokeWidth="8" fill="none" />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        stroke="url(#scoreGradientPro)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={scoreOffset}
+                        strokeLinecap="round"
+                        style={{ transition: "stroke-dashoffset 800ms ease" }}
+                      />
+                      <defs>
+                        <linearGradient id="scoreGradientPro" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#4f46e5" />
+                          <stop offset="100%" stopColor="#818cf8" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-3xl font-extrabold tracking-tight text-slate-900">
+                        {scoreValue}
+                      </span>
+                      <span className="text-[10px] font-medium text-slate-400">out of 10</span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs font-bold text-slate-700">Overall Score</p>
+                </div>
+
+                {/* Strengths & Improvements */}
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/70 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-200/80 text-emerald-800 text-xs font-bold">✓</span>
+                      <h4 className="text-xs font-bold text-emerald-950">Demonstrated Strengths</h4>
+                    </div>
+                    <ul className="space-y-1.5 text-xs text-emerald-900/90 leading-relaxed">
+                      {strengths.map((str: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-600 shrink-0" />
+                          <span>{str}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-xl border border-amber-200/80 bg-amber-50/70 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200/80 text-amber-800 text-xs font-bold">↗</span>
+                      <h4 className="text-xs font-bold text-amber-950">Actionable Opportunities</h4>
+                    </div>
+                    <ul className="space-y-1.5 text-xs text-amber-900/90 leading-relaxed">
+                      {improvements.map((imp: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-600 shrink-0" />
+                          <span>{imp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
-              <p className="min-h-12 whitespace-pre-wrap text-sm leading-7 text-[#706782]">
-                {transcript || (
-                  <span className="italic text-[#b0a9be]">
-                    Your spoken answer will appear here as you talk...
-                  </span>
-                )}
-              </p>
-            </div>
 
-            {feedback && !loading && (
-              <section className="mt-7 animate-fade-up">
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="eyebrow">YOUR PERFORMANCE</p>
-                    <h3 className="section-title mt-2">Your AI feedback</h3>
-                    <p className="mt-1 text-sm text-[#938ba7]">
-                      Personalized insights for your next attempt.
-                    </p>
-                  </div>
-                  <button
-                    onClick={isSpeaking ? stopSpeaking : () => speakFeedback(feedback)}
-                    className="btn-secondary !min-h-10 !px-4 !py-2 text-xs"
-                  >
-                    {isSpeaking ? "■ Stop voice" : "▶ Listen to feedback"}
-                  </button>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
-                  <div className="premium-card flex flex-col items-center justify-center p-5">
-                    <div className="relative h-32 w-32">
-                      <svg viewBox="0 0 100 100" className="-rotate-90">
-                        <circle cx="50" cy="50" r="42" stroke="#eeeaf8" strokeWidth="8" fill="none" />
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="42"
-                          stroke="url(#scoreGradient)"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={circumference}
-                          strokeDashoffset={scoreOffset}
-                          strokeLinecap="round"
-                          style={{ transition: "stroke-dashoffset 900ms ease" }}
-                        />
-                        <defs>
-                          <linearGradient id="scoreGradient" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#9b78f0" />
-                            <stop offset="100%" stopColor="#68a8f7" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-4xl font-extrabold tracking-tight text-[#40325d]">
-                          {scoreValue}
-                        </span>
-                        <span className="text-[11px] font-semibold text-[#9a91ad]">out of 10</span>
+              {/* Sample Model Answer */}
+              {feedback.sampleAnswer && (
+                <div className="mt-5 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                        <span className="text-xs">✦</span>
                       </div>
+                      <h4 className="text-xs font-bold text-slate-900">Benchmark Model Answer</h4>
                     </div>
-                    <p className="mt-2 text-xs font-bold text-[#827693]">Overall score</p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/90 to-white p-5">
-                      <div className="mb-3 flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">✓</span>
-                        <h4 className="font-bold text-emerald-900">What worked well</h4>
-                      </div>
-                      <ul className="space-y-2 text-sm leading-6 text-emerald-900/80">
-                        {strengths.map((strength: string, index: number) => (
-                          <li key={index} className="flex gap-2">
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                            <span>{strength}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-5">
-                      <div className="mb-3 flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700">↗</span>
-                        <h4 className="font-bold text-amber-900">Areas to improve</h4>
-                      </div>
-                      <ul className="space-y-2 text-sm leading-6 text-amber-900/80">
-                        {improvements.map((improvement: string, index: number) => (
-                          <li key={index} className="flex gap-2">
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                            <span>{improvement}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                {feedback.sampleAnswer && (
-                  <div className="mt-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-5 sm:p-6">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
-                        ✨
-                      </span>
-                      <div>
-                        <h4 className="font-bold text-[#453568]">Example of a stronger answer</h4>
-                        <p className="text-xs text-[#9488ad]">Use this as a guide, not a script.</p>
-                      </div>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm leading-7 text-[#625576]">
-                      {feedback.sampleAnswer}
-                    </p>
                     <button
-                      onClick={() => {
-                        void GenCopyAnswer(feedback.sampleAnswer);
-                      }}
-                      className="mt-4 rounded-xl border border-violet-200 bg-white px-4 py-2 text-xs font-bold text-violet-700 transition hover:bg-violet-50"
+                      onClick={() => void GenCopyAnswer(feedback.sampleAnswer)}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 transition"
                     >
-                      Copy example answer
+                      Copy Benchmark Answer
                     </button>
                   </div>
-                )}
-
-                {feedback.communicationTip && (
-                  <div className="mt-4 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
-                        💡
-                      </span>
-                      <div>
-                        <h4 className="font-bold text-sky-900">Communication tip</h4>
-                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-sky-900/80">
-                          {feedback.communicationTip}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {feedback.followUpQuestion && (
-                  <div className="mt-4 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5 sm:p-6">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
-                        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-                          <path d="M8 10h8M8 14h5m-8 6 3-3h10a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v14Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                          AI interviewer asks
-                        </p>
-                        <h4 className="mt-2 text-base font-bold leading-7 text-[#40345f]">
-                          {feedback.followUpQuestion}
-                        </h4>
-                        <p className="mt-2 text-xs leading-5 text-[#8c82a3]">
-                          Continue your practice by answering this related question.
-                        </p>
-                        <button
-                          onClick={handlePracticeFollowUp}
-                          className="btn-primary mt-4 !min-h-11 !px-5 !py-2.5 text-sm"
-                        >
-                          Practice follow-up question →
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </section>
-            )}
-          </section>
-
-          <aside className="space-y-6">
-            <section className="premium-card p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="eyebrow">YOUR JOURNEY</p>
-                  <h2 className="mt-2 text-xl font-extrabold text-[#34294c]">Practice overview</h2>
-                </div>
-                <span className="brand-icon h-11 w-11 rounded-xl">
-                  <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-                    <path d="M4 19V5m0 14h16M8 16v-4m4 4V7m4 9v-7m4 7v-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                  </svg>
-                </span>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-gradient-to-br from-violet-50 to-white p-4">
-                  <p className="text-xs font-semibold text-[#938ba7]">Attempts</p>
-                  <p className="mt-2 text-3xl font-extrabold text-[#57418b]">{history.length}</p>
-                  <p className="mt-1 text-[11px] text-[#a49bb7]">Saved sessions</p>
-                </div>
-                <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-4">
-                  <p className="text-xs font-semibold text-[#938ba7]">Average score</p>
-                  <p className="mt-2 text-3xl font-extrabold text-[#466fae]">
-                    {history.length
-                      ? (
-                          history.reduce((sum, item) => sum + item.score, 0) /
-                          history.length
-                        ).toFixed(1)
-                      : "—"}
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#a49bb7]">Out of 10</p>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-xl border border-violet-100 bg-violet-50/60 p-4">
-                <p className="text-sm font-bold text-[#58467d]">
-                  A little practice goes a long way.
-                </p>
-                <p className="mt-1 text-xs leading-5 text-[#9185ab]">
-                  Focus on clear examples, structured answers, and steady delivery.
-                </p>
-              </div>
-            </section>
-
-            <section className="premium-card p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="eyebrow">YOUR PROGRESS</p>
-                  <h2 className="mt-2 text-xl font-extrabold text-[#34294c]">Recent attempts</h2>
-                </div>
-                {history.length > 0 && (
-                  <button
-                    onClick={clearHistory}
-                    className="rounded-lg px-2 py-1 text-xs font-bold text-[#9a8eae] transition hover:bg-rose-50 hover:text-rose-600"
-                  >
-                    Clear history
-                  </button>
-                )}
-              </div>
-
-              {history.length === 0 ? (
-                <div className="py-9 text-center">
-                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-blue-100 text-violet-600">
-                    <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
-                      <path d="M12 8v4l3 2M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <p className="mt-4 text-sm font-bold text-[#514565]">Your journey starts here</p>
-                  <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-[#a29ab2]">
-                    Complete your first practice session and your results will show up here.
+                  <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-700 bg-slate-50/70 rounded-xl p-4 border border-slate-100">
+                    {feedback.sampleAnswer}
                   </p>
                 </div>
-              ) : (
-                <div className="mt-5 space-y-3">
-                  {history.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-xl border border-[#f0edf7] bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-[0_8px_24px_rgba(100,75,160,0.06)]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <span className="inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-violet-700">
-                            {item.category}
-                          </span>
-                          <p className="mt-2 truncate text-sm font-semibold leading-6 text-[#514565]">
-                            {item.question}
-                          </p>
-                          <p className="mt-1 text-[11px] text-[#a49bb7]">{item.timestamp}</p>
-                        </div>
-                        <div className="shrink-0 rounded-xl bg-gradient-to-br from-violet-50 to-blue-50 px-3 py-2 text-center">
-                          <p className="text-lg font-extrabold text-[#765bd0]">{item.score}</p>
-                          <p className="text-[9px] font-bold text-[#a098b4]">/ 10</p>
-                        </div>
-                      </div>
+              )}
+
+              {/* Follow-up Interview Question */}
+              {feedback.followUpQuestion && (
+                <div className="mt-5 rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-5 sm:p-6">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white text-xs font-bold">
+                      Q+
                     </div>
-                  ))}
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-700">
+                        Adaptive Follow-Up
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900 leading-normal">
+                        {feedback.followUpQuestion}
+                      </h4>
+                      <button
+                        onClick={handlePracticeFollowUp}
+                        className="mt-3 pro-btn-primary !min-h-9 !px-4 !py-1.5 text-xs font-bold"
+                      >
+                        Practice Follow-Up Question →
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </section>
+          )}
+        </section>
 
-            <div className="rounded-2xl border border-white bg-white/60 p-4 text-center">
-              <p className="text-xs leading-5 text-[#a29ab3]">
-                Made for growth, powered by practice.
-                <span className="ml-1 font-bold text-[#8b72d6]">PrepVoice.</span>
+        {/* Right Side: Overview & History Sidebar */}
+        <aside className="space-y-6">
+          {/* Practice Summary */}
+          <section className="pro-card p-6">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-900">Session Telemetry</h2>
+              <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                Live Memory
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                <p className="text-[11px] font-medium text-slate-500">Total Attempts</p>
+                <p className="mt-1 text-2xl font-extrabold text-slate-900">{history.length}</p>
+                <p className="text-[10px] text-slate-400">Sessions saved</p>
+              </div>
+
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                <p className="text-[11px] font-medium text-slate-500">Average Score</p>
+                <p className="mt-1 text-2xl font-extrabold text-indigo-700">
+                  {history.length
+                    ? (
+                        history.reduce((sum, item) => sum + item.score, 0) /
+                        history.length
+                      ).toFixed(1)
+                    : "—"}
+                </p>
+                <p className="text-[10px] text-slate-400">Scale of 10</p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3.5">
+              <p className="text-xs font-bold text-indigo-900">Coaching Directive</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+                Structure answers using the STAR format: Situation, Task, Action, and Quantitative Result.
               </p>
             </div>
-          </aside>
-        </div>
+          </section>
+
+          {/* Recent History Feed */}
+          <section className="pro-card p-6">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-900">Recent Session Feed</h2>
+              {history.length > 0 && (
+                <button
+                  onClick={clearHistory}
+                  className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 transition"
+                >
+                  Clear Feed
+                </button>
+              )}
+            </div>
+
+            {history.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-xs text-slate-500">
+                  Complete your first question to view your historical evaluation trail.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                {history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 transition-colors hover:bg-slate-50"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="inline-block rounded-md bg-white border border-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                          {item.category}
+                        </span>
+                        <p className="mt-1 text-xs font-semibold text-slate-800 line-clamp-1">
+                          {item.question}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-slate-400">{item.timestamp}</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <span className="text-sm font-extrabold text-indigo-700">
+                          {item.score}
+                        </span>
+                        <span className="text-[10px] text-slate-400">/10</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </aside>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -979,10 +906,10 @@ function GenCopyAnswer(text: string) {
   if (typeof navigator !== "undefined" && navigator.clipboard) {
     return navigator.clipboard.writeText(text).catch((error) => {
       console.error("Unable to copy sample answer:", error);
-      alert("Copy nahi ho paya. Please manually select the text.");
+      alert("Failed to copy automatically. Please select text manually.");
     });
   }
 
-  alert("Clipboard access is not available in this browser.");
+  alert("Clipboard access is not permitted in this browser.");
   return Promise.resolve();
 }

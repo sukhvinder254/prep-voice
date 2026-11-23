@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,56 +7,47 @@ const roles = [
   {
     name: "Software Development Engineer",
     short: "SDE",
-    description: "DSA, problem solving and core CS concepts",
-    icon: "💻",
+    description: "Data structures, algorithms, system architecture, and problem solving",
   },
   {
     name: "Frontend Developer",
     short: "Frontend",
-    description: "React, JavaScript, Next.js and UI development",
-    icon: "🎨",
+    description: "React, TypeScript, Next.js, performance optimization, and web standards",
   },
   {
     name: "Backend Developer",
     short: "Backend",
-    description: "APIs, databases, server-side development",
-    icon: "⚙️",
+    description: "Distributed systems, microservices, databases, and API engineering",
   },
   {
     name: "Full Stack Developer",
     short: "Full Stack",
-    description: "Frontend, backend and database integration",
-    icon: "🌐",
+    description: "End-to-end web architectures, full stack integration, and cloud services",
   },
   {
-    name: "Data Analyst",
-    short: "Data Analyst",
-    description: "SQL, Python, analytics and data interpretation",
-    icon: "📊",
+    name: "Data Analyst / Scientist",
+    short: "Data",
+    description: "SQL, Python, statistical modeling, analytical decision making, and metrics",
   },
   {
-    name: "Product Analyst",
-    short: "Product Analyst",
-    description: "Product metrics, business and analytical thinking",
-    icon: "📈",
+    name: "Product Analyst / PM",
+    short: "Product",
+    description: "Product execution, user funnel metrics, business cases, and trade-offs",
   },
   {
-    name: "AI / ML Engineer",
+    name: "AI / Machine Learning Engineer",
     short: "AI / ML",
-    description: "Python, machine learning and AI fundamentals",
-    icon: "🤖",
+    description: "Deep learning, LLMs, PyTorch, model serving, and feature pipelines",
   },
   {
-    name: "DevOps Engineer",
+    name: "DevOps & Cloud Engineer",
     short: "DevOps",
-    description: "Cloud, CI/CD and infrastructure fundamentals",
-    icon: "☁️",
+    description: "Kubernetes, Docker, CI/CD automation, AWS/GCP, and site reliability",
   },
   {
     name: "Other",
-    short: "Other",
-    description: "Enter your preferred job role",
-    icon: "✦",
+    short: "Custom",
+    description: "Specify a custom role for personalized interview generation",
   },
 ];
 
@@ -66,8 +56,7 @@ export default function RoleSelectionPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [customRole, setCustomRole] = useState("");
 
-  const roleName =
-    selectedRole === "Other" ? customRole.trim() : selectedRole;
+  const roleName = selectedRole === "Other" ? customRole.trim() : selectedRole;
 
   const company =
     typeof window !== "undefined"
@@ -75,39 +64,39 @@ export default function RoleSelectionPage() {
       : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#faf8ff] via-[#f5f0ff] to-[#eee7ff] px-5 py-12 text-gray-800">
-      <div className="mx-auto max-w-5xl">
-
-        <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/80 px-4 py-2 text-sm font-semibold text-purple-700 shadow-sm">
-            ✦ PREPVOICE AI
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Role Calibration
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs font-medium text-slate-500">Step 2 of 4</span>
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Select Your Interview Role
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Select Your Target Role
           </h1>
-
-          <p className="mt-3 text-sm text-gray-500 sm:text-base">
-            Choose the role you want to prepare for at{" "}
-            <span className="font-semibold text-purple-700">
-              {company || "your target company"}
+          <p className="mt-1 text-sm text-slate-500">
+            Targeting{" "}
+            <span className="font-bold text-indigo-700">
+              {company || "Selected Organization"}
             </span>
-            .
+            . Choose your specialization track to calibrate question depth.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white/80 p-5 shadow-[0_12px_45px_rgba(100,70,160,0.09)] backdrop-blur-sm sm:p-9">
-
-          <div className="mb-7">
-            <h2 className="text-xl font-bold text-gray-900">
-              Which role are you targeting?
+        <div className="pro-card p-6 sm:p-8">
+          <div className="mb-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900">
+              Select Position Track
             </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Select the role that matches your career goal.
-            </p>
+            <span className="text-xs text-slate-400">9 Core Tracks</span>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3.5 sm:grid-cols-2">
             {roles.map((role) => {
               const isSelected = selectedRole === role.name;
 
@@ -116,26 +105,27 @@ export default function RoleSelectionPage() {
                   key={role.name}
                   type="button"
                   onClick={() => setSelectedRole(role.name)}
-                  className={`rounded-2xl border p-5 text-left transition-all duration-200 ${
+                  className={`rounded-xl border p-4.5 text-left transition-all duration-150 ${
                     isSelected
-                      ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-100"
-                      : "border-purple-100 bg-white hover:-translate-y-1 hover:border-purple-300 hover:shadow-md"
+                      ? "border-indigo-600 bg-indigo-50/80 shadow-xs ring-1 ring-indigo-600"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl">{role.icon}</span>
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+                      {role.short}
+                    </span>
                     {isSelected && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-xs text-white">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-xs text-white">
                         ✓
                       </span>
                     )}
                   </div>
 
-                  <h3 className="mt-4 font-bold text-gray-900">
+                  <h3 className="mt-2.5 text-sm font-bold text-slate-900">
                     {role.name}
                   </h3>
-
-                  <p className="mt-2 text-sm leading-6 text-gray-500">
+                  <p className="mt-1 text-xs text-slate-500 leading-normal">
                     {role.description}
                   </p>
                 </button>
@@ -145,19 +135,19 @@ export default function RoleSelectionPage() {
 
           {selectedRole === "Other" && (
             <div className="mt-6">
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Enter your preferred role
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                Custom Role Designation
               </label>
               <input
                 value={customRole}
                 onChange={(e) => setCustomRole(e.target.value)}
-                placeholder="e.g. Cloud Engineer"
-                className="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100"
+                placeholder="e.g. Security Engineer, Solutions Architect..."
+                className="pro-input"
               />
             </div>
           )}
 
-          <div className="mt-9 border-t border-purple-100 pt-6">
+          <div className="mt-8 border-t border-slate-100 pt-6">
             <button
               type="button"
               disabled={!roleName || !company}
@@ -165,13 +155,13 @@ export default function RoleSelectionPage() {
                 sessionStorage.setItem("prepvoice_role", roleName);
                 router.push("/company-interview/level");
               }}
-              className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 px-6 py-4 font-semibold text-white shadow-lg shadow-purple-200 transition hover:-translate-y-0.5 hover:from-purple-700 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="pro-btn-primary w-full text-xs font-bold"
             >
-              Continue to Experience Level →
+              Continue to Seniority Level →
             </button>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

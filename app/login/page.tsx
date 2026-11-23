@@ -1,4 +1,3 @@
-﻿
 "use client";
 
 import { useState } from "react";
@@ -34,181 +33,139 @@ export default function LoginPage() {
       router.push("/interview");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("Unable to authenticate. Please check your credentials and retry.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 sm:px-6">
-      {/* Soft decorative background */}
-      <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-purple-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute right-1/4 top-1/4 h-40 w-40 rounded-full bg-pink-200/20 blur-3xl" />
+    <main className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6">
+      {/* Subtle background ambient mesh */}
+      <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-indigo-500/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-violet-500/5 blur-3xl" />
 
-      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/80 bg-white/80 shadow-[0_24px_100px_rgba(90,65,150,0.12)] backdrop-blur-xl animate-fade-up lg:grid-cols-2">
-        {/* Brand panel */}
-        <section className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#f0eaff] via-[#f7f5ff] to-[#eaf1ff] p-8 sm:p-12 lg:min-h-[650px]">
-          <div className="absolute -right-16 top-28 h-64 w-64 rounded-full border border-violet-200/60" />
-          <div className="absolute -right-5 top-40 h-44 w-44 rounded-full border border-violet-200/50" />
-          <div className="absolute bottom-20 left-1/2 h-44 w-44 rounded-full bg-white/50 blur-3xl" />
-
-          <div className="relative">
-            <Link href="/" className="inline-flex items-center gap-3">
-              <span className="brand-icon h-12 w-12 shadow-sm">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-6 w-6"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                  />
+      <div className="relative z-10 grid w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xl shadow-slate-200/50 lg:grid-cols-2">
+        {/* Left Side: Brand & Feature Highlights */}
+        <section className="relative hidden flex-col justify-between border-r border-slate-100 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-10 text-white lg:flex">
+          <div className="relative z-10">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-500/30">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
                 </svg>
-              </span>
-              <span className="text-lg font-extrabold tracking-tight text-[#29213f]">
-                PrepVoice<span className="text-[#8769e9]">.</span>
+              </div>
+              <span className="font-heading text-lg font-bold tracking-tight text-white">
+                PrepVoice
               </span>
             </Link>
 
-            <div className="mt-14 sm:mt-20">
-              <span className="eyebrow inline-flex rounded-full border border-violet-200/70 bg-white/65 px-3 py-1.5">
-                YOUR AI INTERVIEW COACH
+            <div className="mt-12">
+              <span className="inline-flex rounded-full bg-indigo-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-indigo-300 border border-indigo-400/20">
+                Enterprise AI Interview Studio
               </span>
-
-              <h1 className="brand-wordmark brand-gradient mt-6">
-                Speak with
-                <br />
-                confidence.
+              <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-white leading-tight">
+                Simulate high-stakes interviews with real-time feedback.
               </h1>
-
-              <p className="mt-5 max-w-sm text-base leading-7 text-[#6e6685] sm:text-lg">
-                Every great interview starts with practice. Build your skills,
-                sharpen your answers, and walk in prepared.
+              <p className="mt-3 text-xs leading-relaxed text-slate-300">
+                Calibrated voice scoring across technical accuracy, structure, concise delivery, and behavioral authority.
               </p>
             </div>
           </div>
 
-          <div className="relative mt-12 rounded-2xl border border-white/80 bg-white/65 p-5 shadow-[0_10px_35px_rgba(104,79,160,0.06)] backdrop-blur-md">
-            <div className="flex items-start gap-3">
-              <span className="brand-icon h-10 w-10 shrink-0 rounded-xl">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="h-5 w-5"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <div>
-                <p className="font-bold text-[#302748]">
-                  Progress starts with practice
-                </p>
-                <p className="mt-1 text-sm leading-6 text-[#777087]">
-                  Practice answering out loud and learn from personalized AI
-                  feedback.
-                </p>
+          <div className="relative z-10 space-y-3">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xs">
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs">✓</span>
+                <span className="text-xs font-semibold text-white">Gemini 1.5 Real-Time Evaluation</span>
               </div>
+              <p className="mt-1.5 text-[11px] text-slate-300 leading-normal">
+                Instant diagnostic breakdown with strengths, improvements, and ideal sample answers.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xs">
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 text-xs">✓</span>
+                <span className="text-xs font-semibold text-white">Company & Resume Tailored</span>
+              </div>
+              <p className="mt-1.5 text-[11px] text-slate-300 leading-normal">
+                Target mock interviews customized for Google, Amazon, startups, or your uploaded CV.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Login form */}
-        <section className="flex items-center justify-center bg-white/90 p-7 sm:p-12 lg:p-14">
-          <div className="w-full max-w-sm">
-            <div className="mb-8 lg:hidden">
-              <Link href="/" className="inline-flex items-center gap-3">
-                <span className="brand-icon h-10 w-10 rounded-xl">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="h-5 w-5"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <span className="text-lg font-extrabold text-[#29213f]">
-                  PrepVoice<span className="text-[#8769e9]">.</span>
-                </span>
-              </Link>
-            </div>
-
+        {/* Right Side: Sign In Form */}
+        <section className="flex flex-col justify-center p-8 sm:p-12">
+          <div className="w-full max-w-sm mx-auto">
             <div className="mb-8">
-              <p className="eyebrow">WELCOME BACK</p>
-              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#27213b] sm:text-[34px]">
-                Sign in to your
-                <br />
-                <span className="brand-gradient">next opportunity.</span>
+              <div className="lg:hidden mb-4">
+                <div className="inline-flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    </svg>
+                  </div>
+                  <span className="font-heading font-bold text-slate-900">PrepVoice</span>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                Sign in to your account
               </h2>
-              <p className="mt-3 text-sm leading-6 text-[#7c778d]">
-                Enter your details to continue your interview preparation.
+              <p className="mt-1.5 text-xs text-slate-500">
+                Continue your voice practice session and track your progress.
               </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label
                   htmlFor="email"
-                  className="mb-2 block text-sm font-semibold text-[#39324f]"
+                  className="mb-1.5 block text-xs font-semibold text-slate-700"
                 >
-                  Email address
+                  Work or Personal Email
                 </label>
                 <input
                   id="email"
                   type="email"
-                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="premium-input"
-                  placeholder="you@example.com"
+                  className="pro-input"
+                  placeholder="name@example.com"
+                  autoComplete="email"
                 />
               </div>
 
               <div>
-                <div className="mb-2 flex items-center justify-between gap-3">
+                <div className="mb-1.5 flex items-center justify-between">
                   <label
                     htmlFor="password"
-                    className="block text-sm font-semibold text-[#39324f]"
+                    className="block text-xs font-semibold text-slate-700"
                   >
                     Password
                   </label>
                 </div>
-
                 <div className="relative">
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="premium-input pr-20"
-                    placeholder="Enter your password"
+                    className="pro-input pr-16"
+                    placeholder="••••••••"
+                    autoComplete="current-password"
                   />
-
                   <button
                     type="button"
-                    onClick={() => setShowPassword((value) => !value)}
-                    className="absolute inset-y-0 right-3 my-auto rounded-md px-2 text-xs font-bold text-[#7964c5] transition hover:bg-[#f4f0ff]"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-2 my-auto px-2 text-xs font-medium text-slate-500 hover:text-slate-800"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
@@ -216,67 +173,41 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p
+                <div
                   role="alert"
-                  className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700"
+                  className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700"
                 >
                   {error}
-                </p>
+                </div>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full"
+                className="pro-btn-primary w-full text-xs font-bold"
               >
                 {loading ? (
                   <>
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    Signing you in...
+                    Authenticating...
                   </>
                 ) : (
-                  <>
-                    Sign in to PrepVoice
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="h-4 w-4"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M5 12h14m-6-6 6 6-6 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </>
+                  "Sign In to PrepVoice"
                 )}
               </button>
             </form>
 
-            <div className="my-7 flex items-center gap-4">
-              <div className="h-px flex-1 bg-[#eeeaf5]" />
-              <span className="text-xs font-medium text-[#aaa4b9]">
-                YOUR NEXT CHAPTER
-              </span>
-              <div className="h-px flex-1 bg-[#eeeaf5]" />
+            <div className="mt-6 border-t border-slate-100 pt-5 text-center">
+              <p className="text-xs text-slate-500">
+                Don&apos;t have an account yet?{" "}
+                <Link
+                  href="/signup"
+                  className="font-semibold text-indigo-600 hover:text-indigo-800"
+                >
+                  Create free account
+                </Link>
+              </p>
             </div>
-
-            <p className="text-center text-sm text-[#777187]">
-              New to PrepVoice?{" "}
-              <Link
-                href="/signup"
-                className="font-bold text-[#7659dc] transition hover:text-[#5738c2]"
-              >
-                Create your account
-              </Link>
-            </p>
-
-            <p className="mt-8 text-center text-xs leading-5 text-[#aaa4b7]">
-              Your practice journey, one answer at a time.
-            </p>
           </div>
         </section>
       </div>

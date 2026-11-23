@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -100,99 +99,137 @@ export default async function AnalyticsPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-[#f8f7ff] px-6 py-8 text-gray-800 md:px-10">
-      <header className="mb-8">
-        <p className="text-sm font-semibold text-purple-600">
-          PREPVOICE AI
-        </p>
-        <h1 className="mt-2 text-3xl font-bold">Your Analytics</h1>
-        <p className="mt-2 text-gray-500">
-          Track your interview performance and improvement.
-        </p>
-      </header>
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                Performance Telemetry
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs font-medium text-slate-500">Readiness Metrics</span>
+            </div>
 
-      {error && (
-        <p className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-600">
-          Unable to load analytics data. Please try again later.
-        </p>
-      )}
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+              Performance & Diagnostics
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Quantitative trends across technical precision, structure, completeness, and delivery.
+            </p>
+          </div>
 
-      <section className="grid gap-5 sm:grid-cols-3">
-        <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Total Interviews</p>
-          <h2 className="mt-3 text-3xl font-bold text-purple-700">
-            {total}
-          </h2>
-        </div>
+          <Link href="/interview" className="pro-btn-primary text-xs font-bold px-4 py-2">
+            + Start Interview Session
+          </Link>
+        </header>
 
-        <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Average Score</p>
-          <h2 className="mt-3 text-3xl font-bold text-purple-700">
-            {total ? `${average.toFixed(1)}/10` : "—"}
-          </h2>
-        </div>
-
-        <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">Best Score</p>
-          <h2 className="mt-3 text-3xl font-bold text-purple-700">
-            {total ? `${best}/10` : "—"}
-          </h2>
-        </div>
-      </section>
-
-      <section className="mt-8 rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-xl font-bold">Score Progress</h2>
-        <AnalyticsChart data={chartData} />
-      </section>
-
-      {/* Skill DNA */}
-      <SkillDNA interviews={validInterviews} />
-      <AIActionPlan interviews={validInterviews} />
-      
-
-      <section className="mt-8 rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-xl font-bold">
-          Category Performance
-        </h2>
-
-        {categories.length === 0 ? (
-          <p className="py-6 text-center text-gray-400">
-            Complete an interview to see category performance.
-          </p>
-        ) : (
-          <div className="space-y-5">
-            {categories.map((category) => (
-              <div key={category.name}>
-                <div className="mb-2 flex justify-between gap-3 text-sm">
-                  <span className="font-semibold">{category.name}</span>
-                  <span className="text-purple-700">
-                    {category.average.toFixed(1)}/10 · {category.count} attempts
-                  </span>
-                </div>
-
-                <div className="h-3 overflow-hidden rounded-full bg-purple-100">
-                  <div
-                    className="h-full rounded-full bg-purple-600"
-                    style={{
-                      width: `${Math.max(
-                        0,
-                        Math.min(100, (category.average / 10) * 100)
-                      )}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+        {error && (
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700">
+            Unable to fetch analytics telemetry. Please retry.
           </div>
         )}
-      </section>
 
-      <Link
-        href="/interview"
-        className="mt-7 inline-block rounded-xl bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
-      >
-        + Start New Interview
-      </Link>
-    </main>
+        {/* Metrics Row */}
+        <section className="grid gap-4 sm:grid-cols-3">
+          <div className="pro-card p-5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Evaluated Sessions
+            </span>
+            <p className="mt-2 text-3xl font-extrabold text-slate-900">{total}</p>
+            <p className="mt-1 text-[11px] text-slate-400">Total completed mock rounds</p>
+          </div>
+
+          <div className="pro-card p-5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Cumulative Average
+            </span>
+            <p className="mt-2 text-3xl font-extrabold text-indigo-700">
+              {total ? `${average.toFixed(1)}` : "—"}
+              <span className="text-xs font-medium text-slate-400"> / 10</span>
+            </p>
+            <p className="mt-1 text-[11px] text-slate-400">Normalized performance score</p>
+          </div>
+
+          <div className="pro-card p-5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Peak Recorded Score
+            </span>
+            <p className="mt-2 text-3xl font-extrabold text-emerald-700">
+              {total ? `${best}` : "—"}
+              <span className="text-xs font-medium text-slate-400"> / 10</span>
+            </p>
+            <p className="mt-1 text-[11px] text-slate-400">Personal best performance</p>
+          </div>
+        </section>
+
+        {/* Historical Score Progress Chart */}
+        <section className="mt-8 pro-card p-6 sm:p-7">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Score Trajectory Progression</h2>
+              <p className="text-xs text-slate-500">Historical performance curve across sequential attempts</p>
+            </div>
+            <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+              Telemetry Trend
+            </span>
+          </div>
+          <AnalyticsChart data={chartData} />
+        </section>
+
+        {/* Skill DNA */}
+        <div className="mt-8">
+          <SkillDNA interviews={validInterviews} />
+        </div>
+
+        {/* AI Action Plan */}
+        <div className="mt-8">
+          <AIActionPlan interviews={validInterviews} />
+        </div>
+
+        {/* Category Performance Breakdown */}
+        <section className="mt-8 pro-card p-6 sm:p-7">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Competency Domain Breakdown
+              </h2>
+              <p className="text-xs text-slate-500">Average performance ratings organized by technical topic</p>
+            </div>
+            <span className="text-xs text-slate-400">{categories.length} Topics</span>
+          </div>
+
+          {categories.length === 0 ? (
+            <div className="py-8 text-center text-xs text-slate-500">
+              Complete mock interview questions to generate categorical performance benchmarks.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {categories.map((cat) => (
+                <div key={cat.name} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                  <div className="mb-2 flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-900">{cat.name}</span>
+                    <span className="font-bold text-indigo-700">
+                      {cat.average.toFixed(1)} / 10 · {cat.count} {cat.count === 1 ? "attempt" : "attempts"}
+                    </span>
+                  </div>
+
+                  <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-500"
+                      style={{
+                        width: `${Math.max(0, Math.min(100, (cat.average / 10) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
   );
 }

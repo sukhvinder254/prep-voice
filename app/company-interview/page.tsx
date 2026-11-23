@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -32,33 +31,32 @@ export default function CompanyInterviewPage() {
     selectedCompany === "Other" ? customCompany.trim() : selectedCompany;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#faf8ff] via-[#f5f0ff] to-[#eee7ff] px-5 py-12 text-gray-800">
-      <div className="mx-auto max-w-5xl">
-
-        <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/80 px-4 py-2 text-sm font-semibold text-purple-700 shadow-sm">
-            <span>✦</span> PREPVOICE AI
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Company Calibration
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs font-medium text-slate-500">Step 1 of 4</span>
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Company-Specific Interview
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Target Company Simulation
           </h1>
-
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500 sm:text-base">
-            Prepare smarter for your dream company with personalised
-            AI-powered interview practice.
+          <p className="mt-1 text-sm text-slate-500">
+            Select your target organization to calibrate interview rubrics, leadership principles, and technical expectations.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white/80 p-5 shadow-[0_12px_45px_rgba(100,70,160,0.09)] backdrop-blur-sm sm:p-9">
-
-          <div className="mb-7">
-            <h2 className="text-xl font-bold text-gray-900">
-              Choose your target company
+        <div className="pro-card p-6 sm:p-8">
+          <div className="mb-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900">
+              Select Target Enterprise or Startup
             </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Select one company to customise your interview experience.
-            </p>
+            <span className="text-xs text-slate-400">16 Calibrated Profiles</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -70,30 +68,30 @@ export default function CompanyInterviewPage() {
                   key={company}
                   type="button"
                   onClick={() => setSelectedCompany(company)}
-                  className={`group relative min-h-[100px] rounded-2xl border p-4 text-left transition-all duration-200 ${
+                  className={`group relative min-h-[90px] rounded-xl border p-4 text-left transition-all duration-150 ${
                     isSelected
-                      ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-100"
-                      : "border-purple-100 bg-white hover:-translate-y-1 hover:border-purple-300 hover:shadow-md"
+                      ? "border-indigo-600 bg-indigo-50/80 shadow-xs ring-1 ring-indigo-600"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`text-base font-bold ${
-                      isSelected ? "text-purple-700" : "text-gray-800"
-                    }`}>
+                    <span
+                      className={`text-sm font-bold ${
+                        isSelected ? "text-indigo-900" : "text-slate-800"
+                      }`}
+                    >
                       {company}
                     </span>
 
                     {isSelected && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-xs text-white">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-xs text-white">
                         ✓
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-3 text-xs text-gray-400">
-                    {company === "Other"
-                      ? "Add your company"
-                      : "Select company"}
+                  <p className="mt-2 text-[11px] text-slate-400">
+                    {company === "Other" ? "Custom Org" : "Standard Track"}
                   </p>
                 </button>
               );
@@ -102,40 +100,33 @@ export default function CompanyInterviewPage() {
 
           {selectedCompany === "Other" && (
             <div className="mt-6">
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Company name
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                Custom Organization Name
               </label>
               <input
                 value={customCompany}
                 onChange={(e) => setCustomCompany(e.target.value)}
-                placeholder="Enter company name..."
-                className="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100"
+                placeholder="e.g. Stripe, OpenAI, Datadog..."
+                className="pro-input"
               />
             </div>
           )}
 
-          <div className="mt-9 border-t border-purple-100 pt-6">
+          <div className="mt-8 border-t border-slate-100 pt-6">
             <button
               type="button"
               disabled={!companyName}
               onClick={() => {
-                sessionStorage.setItem(
-                  "prepvoice_company",
-                  companyName
-                );
+                sessionStorage.setItem("prepvoice_company", companyName);
                 router.push("/company-interview/role");
               }}
-              className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 px-6 py-4 font-semibold text-white shadow-lg shadow-purple-200 transition hover:-translate-y-0.5 hover:from-purple-700 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+              className="pro-btn-primary w-full text-xs font-bold"
             >
-              Continue to Role Selection →
+              Continue to Role Specification →
             </button>
-
-            <p className="mt-3 text-center text-xs text-gray-400">
-              Your interview journey starts here.
-            </p>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

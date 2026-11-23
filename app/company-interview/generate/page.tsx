@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,9 +14,9 @@ interface InterviewData {
   role: string;
   level: string;
   interviewType: string;
-  jobDescriptionUsed?: boolean;
-  keySkills: string[];
   questions: InterviewQuestion[];
+  keySkills: string[];
+  jobDescriptionUsed?: boolean;
 }
 
 export default function GenerateInterviewPage() {
@@ -36,17 +35,13 @@ export default function GenerateInterviewPage() {
       const company = sessionStorage.getItem("prepvoice_company");
       const role = sessionStorage.getItem("prepvoice_role");
       const level = sessionStorage.getItem("prepvoice_level");
-
       const interviewType = sessionStorage.getItem(
         "prepvoice_interview_type"
       );
-
       const questionCount = sessionStorage.getItem(
         "prepvoice_question_count"
       );
-
       const duration = sessionStorage.getItem("prepvoice_duration");
-
       const jobDescription =
         sessionStorage.getItem("prepvoice_job_description") || "";
 
@@ -83,7 +78,7 @@ export default function GenerateInterviewPage() {
 
       if (!response.ok || !data.success) {
         throw new Error(
-          data.error || "Unable to generate your interview."
+          data.error || "Unable to generate your interview questions."
         );
       }
 
@@ -119,161 +114,132 @@ export default function GenerateInterviewPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#faf8ff] via-[#f5f0ff] to-[#eee7ff] px-5 py-12 text-gray-800">
+    <div className="min-h-screen bg-slate-50/70 px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-4xl">
-
-        <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/80 px-4 py-2 text-sm font-semibold text-purple-700 shadow-sm">
-            ✦ PREPVOICE AI
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Interview Generation
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs font-medium text-slate-500">Gemini 1.5 Calibration</span>
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Your Personalised Interview
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Calibrated Interview Plan
           </h1>
-
-          <p className="mt-3 text-sm text-gray-500 sm:text-base">
-            AI-powered interview preparation for your dream company.
+          <p className="mt-1 text-sm text-slate-500">
+            Targeted interview track prepared specifically for your selected organization and domain.
           </p>
         </div>
 
         {loading && (
-          <div className="rounded-3xl border border-white bg-white/80 p-12 text-center shadow-lg shadow-purple-100">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-purple-100 border-t-purple-600" />
-
-            <h2 className="mt-6 text-xl font-bold text-gray-900">
-              Generating Your Interview...
+          <div className="pro-card p-12 text-center">
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-3 border-indigo-100 border-t-indigo-600" />
+            <h2 className="mt-5 text-base font-bold text-slate-900">
+              Generating Question Track...
             </h2>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Gemini AI is analysing your job description and preparing personalised questions.
+            <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+              Synthesizing company interview history, role seniority rubrics, and job requirements.
             </p>
           </div>
         )}
 
         {error && !loading && (
-          <div className="rounded-3xl border border-red-100 bg-white p-8 text-center shadow-lg">
-            <div className="text-3xl">⚠️</div>
-
-            <h2 className="mt-4 text-xl font-bold text-gray-900">
-              Interview Generation Failed
+          <div className="pro-card p-8 text-center border-rose-200 bg-rose-50/30">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-600 text-sm font-bold">
+              !
+            </div>
+            <h2 className="mt-3 text-base font-bold text-slate-900">
+              Generation Interrupted
             </h2>
-
-            <p className="mt-3 text-sm text-gray-500">{error}</p>
-
+            <p className="mt-1 text-xs text-slate-600 max-w-md mx-auto">{error}</p>
             <button
               onClick={generateInterview}
-              className="mt-6 rounded-xl bg-purple-600 px-6 py-3 font-semibold text-white transition hover:bg-purple-700"
+              className="mt-4 pro-btn-primary !min-h-9 text-xs"
             >
-              Try Again →
+              Retry Generation →
             </button>
           </div>
         )}
 
         {interview && !loading && (
-          <div className="rounded-3xl border border-white bg-white/80 p-5 shadow-[0_12px_45px_rgba(100,70,160,0.09)] sm:p-9">
-
-            <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="pro-card p-6 sm:p-8 space-y-7 animate-fade-up">
+            {/* Header Specs */}
+            <div className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100">
               <div>
-                <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                  AI GENERATED
+                <span className="rounded-md bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700">
+                  Target Org Track
                 </span>
-
-                <h2 className="mt-4 text-2xl font-bold text-gray-900">
+                <h2 className="mt-2 text-2xl font-extrabold text-slate-900">
                   {interview.company}
                 </h2>
-
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="text-xs font-semibold text-slate-500">
                   {interview.role}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-700">
-                {interview.level}
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700">
+                {interview.level} Track
               </div>
             </div>
 
-            {interview.jobDescriptionUsed && (
-              <div className="mt-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-                <p className="text-sm font-semibold text-green-800">
-                  ✓ Job Description-Based Preparation
-                </p>
-                <p className="mt-1 text-xs text-green-700">
-                  Your questions are tailored to the job requirements you provided.
-                </p>
-              </div>
-            )}
+            {/* Spec KPIs */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {[
+                ["Evaluation Domain", interview.interviewType],
+                ["Question Count", `${interview.questions.length} Scenarios`],
+                ["Target Duration", `${sessionStorage.getItem("prepvoice_duration") || "30"} Minutes`],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <p className="text-[11px] text-slate-400 font-medium">{label}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-900">{value}</p>
+                </div>
+              ))}
+            </div>
 
+            {/* Key Skills */}
             {interview.keySkills?.length > 0 && (
-              <section className="mt-7 rounded-2xl border border-purple-100 bg-purple-50/60 p-5">
-                <h3 className="text-lg font-bold text-gray-900">
-                  Key Skills Identified
-                </h3>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Skills and technologies relevant to this interview.
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {interview.keySkills.map((skill, index) => (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                <p className="text-xs font-bold text-slate-800">Assessed Competencies & Focus Points</p>
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {interview.keySkills.map((skill, idx) => (
                     <span
-                      key={`${skill}-${index}`}
-                      className="rounded-full border border-purple-200 bg-white px-4 py-2 text-sm font-semibold text-purple-700"
+                      key={`${skill}-${idx}`}
+                      className="rounded-md bg-white border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700"
                     >
                       {skill}
                     </span>
                   ))}
                 </div>
-              </section>
+              </div>
             )}
 
-            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {[
-                ["Interview Type", interview.interviewType],
-                ["Total Questions", String(interview.questions.length)],
-                [
-                  "Duration",
-                  `${sessionStorage.getItem("prepvoice_duration") || "—"} min`,
-                ],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="rounded-xl border border-purple-100 bg-white p-4"
-                >
-                  <p className="text-xs text-gray-400">{label}</p>
-
-                  <p className="mt-2 text-sm font-bold text-gray-800">
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-9 border-t border-purple-100 pt-7">
-              <h3 className="text-xl font-bold text-gray-900">
-                Your Interview Questions
+            {/* Question List */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-1">
+                Generated Mock Interview Scenarios
               </h3>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Personalised questions generated for your preparation.
+              <p className="text-xs text-slate-500 mb-4">
+                Structured questions designed to simulate this company&apos;s interview round.
               </p>
 
-              <div className="mt-6 space-y-4">
+              <div className="space-y-3">
                 {interview.questions.map((item, index) => (
                   <div
                     key={index}
-                    className="rounded-2xl border border-purple-100 bg-white p-5 transition hover:border-purple-300"
+                    className="rounded-xl border border-slate-200/80 bg-white p-4 transition-colors hover:border-indigo-200"
                   >
-                    <div className="flex items-start gap-4">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-sm font-bold text-purple-700">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-xs font-bold text-indigo-700">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-
-                      <div className="flex-1">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-purple-600">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
                           {item.category}
                         </span>
-
-                        <p className="mt-2 text-sm font-medium leading-7 text-gray-800">
+                        <p className="mt-1 text-xs font-medium text-slate-800 leading-relaxed">
                           {item.question}
                         </p>
                       </div>
@@ -285,23 +251,13 @@ export default function GenerateInterviewPage() {
 
             <button
               onClick={handleStartInterview}
-              className="mt-8 w-full rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 px-6 py-4 font-semibold text-white shadow-lg shadow-purple-200 transition hover:-translate-y-0.5 hover:from-purple-700 hover:to-violet-700"
+              className="pro-btn-primary w-full text-xs font-bold"
             >
-              Start Voice Mock Interview →
+              Start Live Voice Simulation with These Questions →
             </button>
-
-            <div className="mt-5 rounded-2xl bg-purple-50 p-5 text-center">
-              <p className="font-semibold text-purple-800">
-                Your personalised interview is ready!
-              </p>
-
-              <p className="mt-2 text-sm text-purple-600">
-                Your selected company, role and job requirements have been used to personalise these questions.
-              </p>
-            </div>
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
