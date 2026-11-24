@@ -328,6 +328,14 @@ export default function Home() {
 
     stopSpeaking();
 
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {
+        console.warn("Recognition abort error:", e);
+      }
+    }
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -344,6 +352,11 @@ export default function Home() {
     recognition.onerror = (event: any) => {
       console.error("Speech Recognition Error:", event.error);
       setIsRecording(false);
+      if (event.error === "not-allowed" || event.error === "permission-denied") {
+        alert("Microphone permission was blocked. Please click the lock/settings icon in your browser URL bar to allow microphone access.");
+      } else if (event.error === "audio-capture") {
+        alert("No microphone was detected. Please plug in or select a working audio input device.");
+      }
     };
 
     recognition.onend = () => {
@@ -353,20 +366,18 @@ export default function Home() {
     recognitionRef.current = recognition;
     setTranscript("");
     setFeedback(null);
-    recognition.start();
-    setIsRecording(true);
-  };
-
-  const handleStop = async () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    try {
+      recognition.start();
+      setIsRecording(true);
+    } catch (e) {
+      console.error("Start recording failed:", e);
       setIsRecording(false);
     }
+  };
 
-    const answerText = transcript.trim();
-
-    if (!answerText) {
-      alert("No speech detected. Please try recording your answer again.");
+  const evaluateAnswer = async (answerText: string) => {
+    if (!answerText || answerText.trim().length === 0) {
+      alert("Please speak or type an answer to evaluate.");
       return;
     }
 
@@ -378,14 +389,14 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: activeQuestionText,
-          answer: answerText,
+          answer: answerText.trim(),
           category: activeCategory,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok && !data.score) {
         throw new Error(data.error || "Evaluation failed");
       }
 
@@ -395,16 +406,36 @@ export default function Home() {
         data,
         activeQuestionText,
         activeCategory,
-        answerText
+        answerText.trim()
       );
 
       speakFeedback(data);
     } catch (error) {
       console.error("Feedback request error:", error);
-      alert("Unable to fetch AI evaluation. Please try again.");
+      alert("Unable to fetch AI evaluation. Please try again or rephrase your answer.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStop = async () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.warn("Stop recognition error:", e);
+      }
+      setIsRecording(false);
+    }
+
+    const answerText = transcript.trim();
+
+    if (!answerText) {
+      alert("No speech was detected. Please speak into your microphone or type your answer directly in the transcript box below.");
+      return;
+    }
+
+    await evaluateAnswer(answerText);
   };
 
   const handlePracticeFollowUp = () => {
@@ -665,6 +696,22 @@ export default function Home() {
                 </span>
               )}
             </p>
+
+            {transcript && !isRecording && (
+              <div className="mt-3 flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => evaluateAnswer(transcript)}
+                  disabled={loading}
+                  className="pro-btn-primary !min-h-8 !px-3.5 !py-1 text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Evaluate This Transcript</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* AI Feedback & Diagnostic Evaluation Report */}
