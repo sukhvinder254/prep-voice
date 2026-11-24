@@ -20,9 +20,10 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
+      const cleanedEmail = email.trim().toLowerCase();
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: cleanedEmail,
+        password: password.trim(),
       });
 
       if (error) {

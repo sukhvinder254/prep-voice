@@ -30,11 +30,64 @@ interface ProgressData {
   dailyProgress: DailyRecord[];
 }
 
+interface CalendarDay {
+  date: string;
+  day: number;
+  month: number;
+  year: number;
+}
+
+interface CalendarMonth {
+  label: string;
+  column: number;
+}
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const CELL_SIZE = 12;
+const CELL_GAP = 3;
+const WEEK_WIDTH = CELL_SIZE + CELL_GAP;
+
+function getLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatDate(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getActivityLevel(count: number): number {
+  if (count <= 0) return 0;
+  if (count === 1) return 1;
+  if (count === 2) return 2;
+  if (count === 3) return 3;
+  return 4;
+}
+
+function getActivityColor(level: number): string {
+  const colors = [
+    "bg-slate-100 border-slate-200",
+    "bg-purple-100 border-purple-200",
+    "bg-purple-300 border-purple-300",
+    "bg-purple-500 border-purple-500",
+    "bg-purple-700 border-purple-700",
+  ];
+
+  return colors[level] ?? colors[0];
+}
+
 export default function DailyProgress() {
   const [data, setData] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [monthOffset, setMonthOffset] = useState(0);
 
   useEffect(() => {
     async function loadProgress() {
@@ -59,68 +112,91 @@ export default function DailyProgress() {
 
   const dailyProgress = data?.dailyProgress ?? [];
 
-  const selectedDay = dailyProgress.find(
-    (day) => day.date === selectedDate
+  const progressMap = useMemo(
+    () => new Map(dailyProgress.map((day) => [day.date, day])),
+    [dailyProgress]
   );
 
+  const selectedDay = selectedDate
+    ? progressMap.get(selectedDate)
+    : undefined;
+
+  // Generate complete January-December calendar.
   const calendar = useMemo(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const month = new Date(
-      today.getFullYear(),
-      today.getMonth() + monthOffset,
-      1
-    );
+    const year = today.getFullYear();
 
-    const year = month.getFullYear();
-    const monthIndex = month.getMonth();
+    // Start from Sunday of the week containing January 1.
+    const startDate = new Date(year, 0, 1);
+    startDate.setDate(startDate.getDate() - startDate.getDay());
 
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    const firstDay = new Date(year, monthIndex, 1).getDay();
+    // End on Saturday of the week containing December 31.
+    const endDate = new Date(year, 11, 31);
+    endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+
+    const weeks: (CalendarDay | null)[][] = [];
+    const months: CalendarMonth[] = [];
+
+    const cursor = new Date(startDate);
+
+    while (cursor <= endDate) {
+      const currentWeek: (CalendarDay | null)[] = [];
+
+      for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+        if (cursor.getFullYear() === year) {
+          currentWeek.push({
+            date: getLocalDateKey(cursor),
+            day: cursor.getDate(),
+            month: cursor.getMonth(),
+            year: cursor.getFullYear(),
+          });
+        } else {
+          currentWeek.push(null);
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      weeks.push(currentWeek);
+    }
+
+    // Calculate accurate week-column positions for all months.
+    for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+      const firstDay = new Date(year, monthIndex, 1);
+
+      const startUTC = Date.UTC(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate()
+      );
+
+      const monthUTC = Date.UTC(
+        firstDay.getFullYear(),
+        firstDay.getMonth(),
+        firstDay.getDate()
+      );
+
+      const daysFromStart = Math.round(
+        (monthUTC - startUTC) / (1000 * 60 * 60 * 24)
+      );
+
+      months.push({
+        label: firstDay.toLocaleDateString("en-IN", {
+          month: "short",
+        }),
+        column: Math.floor(daysFromStart / 7),
+      });
+    }
 
     return {
-      label: month.toLocaleDateString("en-IN", {
-        month: "long",
-        year: "numeric",
-      }),
-      cells: [
-        ...Array(firstDay).fill(null),
-        ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
-      ],
+      weeks,
+      months,
+      year,
+      todayKey: getLocalDateKey(today),
     };
-  }, [monthOffset]);
-
-  const progressMap = new Map(
-    dailyProgress.map((day) => [day.date, day])
-  );
-
-  function getDateKey(day: number) {
-    const today = new Date();
-
-    return [
-      new Date(
-        today.getFullYear(),
-        today.getMonth() + monthOffset,
-        day
-      ).getFullYear(),
-      String(
-        new Date(
-          today.getFullYear(),
-          today.getMonth() + monthOffset,
-          day
-        ).getMonth() + 1
-      ).padStart(2, "0"),
-      String(day).padStart(2, "0"),
-    ].join("-");
-  }
-
-  function formatDate(date: string) {
-    return new Date(`${date}T12:00:00`).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  }
+  }, []);
 
   if (loading) {
     return (
@@ -138,6 +214,7 @@ export default function DailyProgress() {
         <p className="font-semibold text-gray-800">
           Daily progress is currently unavailable.
         </p>
+
         <p className="mt-2 text-sm text-gray-500">
           Please refresh the dashboard and try again.
         </p>
@@ -147,13 +224,16 @@ export default function DailyProgress() {
 
   return (
     <section className="mt-10 space-y-6">
+      {/* Header */}
       <div>
         <p className="text-sm font-semibold tracking-wider text-purple-600">
           PREPVOICE INTELLIGENCE
         </p>
+
         <h2 className="mt-2 text-2xl font-bold text-gray-800">
           Daily Progress 📅
         </h2>
+
         <p className="mt-2 text-sm text-gray-500">
           Track your interview practice and performance day by day.
         </p>
@@ -183,115 +263,177 @@ export default function DailyProgress() {
         </div>
       </div>
 
-      {/* Activity Calendar */}
+      {/* Practice Activity */}
       <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-bold text-gray-800">
               Practice Activity
             </h3>
+
             <p className="mt-1 text-sm text-gray-500">
-              Select a date to view your practice sessions.
+              Your daily practice contributions throughout the year.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setMonthOffset((value) => value - 1);
-                setSelectedDate(null);
-              }}
-              className="rounded-lg border px-3 py-2 hover:bg-purple-50"
-              aria-label="Previous month"
-            >
-              ←
-            </button>
+          <span className="rounded-lg border border-purple-100 bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700">
+            {calendar.year}
+          </span>
+        </div>
 
-            <span className="min-w-32 text-center text-sm font-semibold">
-              {calendar.label}
-            </span>
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <p className="text-sm font-semibold text-gray-700">
+            {data.summary.totalInterviews} interviews
+          </p>
 
-            <button
-              onClick={() => {
-                setMonthOffset((value) => Math.min(0, value + 1));
-                setSelectedDate(null);
+          <span className="text-xs text-gray-400">
+            {data.summary.activeDays} active days
+          </span>
+        </div>
+
+        {/* GitHub Style Contribution Graph */}
+        <div className="mt-6 overflow-x-auto pb-3">
+          <div className="min-w-max">
+
+            {/* Month Labels - Equal spacing between all months */}
+            <div
+              className="mb-2 h-6 pl-[38px]"
+              style={{
+                width: `${
+                  calendar.weeks.length * WEEK_WIDTH + 38
+                }px`,
               }}
-              disabled={monthOffset === 0}
-              className="rounded-lg border px-3 py-2 hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Next month"
             >
-              →
-            </button>
+              <div
+                className="grid h-full gap-x-2"
+                style={{
+                  gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
+                }}
+              >
+                {calendar.months.map((month, index) => (
+                  <span
+                    key={`${month.label}-${index}`}
+                    className="whitespace-nowrap text-[11px] font-semibold text-gray-500"
+                  >
+                    {month.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+
+              {/* Weekday Labels */}
+              <div className="grid grid-rows-7 gap-[3px] pr-1">
+                {WEEKDAYS.map((day, index) => (
+                  <span
+                    key={day}
+                    className={`flex h-3 w-8 items-center text-[10px] text-gray-400 ${
+                      index % 2 === 0 ? "invisible" : ""
+                    }`}
+                  >
+                    {day}
+                  </span>
+                ))}
+              </div>
+
+              {/* Contribution Squares */}
+              <div className="flex gap-[3px]">
+                {calendar.weeks.map((week, weekIndex) => (
+                  <div
+                    key={weekIndex}
+                    className="flex flex-col gap-[3px]"
+                  >
+                    {week.map((day, dayIndex) => {
+                      if (!day) {
+                        return (
+                          <div
+                            key={`empty-${weekIndex}-${dayIndex}`}
+                            className="h-3 w-3"
+                          />
+                        );
+                      }
+
+                      const record = progressMap.get(day.date);
+                      const count = record?.totalInterviews ?? 0;
+                      const level = getActivityLevel(count);
+
+                      const isSelected = selectedDate === day.date;
+                      const isFuture = day.date > calendar.todayKey;
+
+                      return (
+                        <button
+                          key={day.date}
+                          type="button"
+                          disabled={isFuture}
+                          onClick={() => setSelectedDate(day.date)}
+                          title={`${count} ${
+                            count === 1 ? "interview" : "interviews"
+                          } on ${formatDate(day.date)}`}
+                          aria-label={`${formatDate(day.date)}: ${count} ${
+                            count === 1 ? "interview" : "interviews"
+                          }`}
+                          aria-pressed={isSelected}
+                          className={`h-3 w-3 shrink-0 rounded-[3px] border transition-all duration-150 ${getActivityColor(
+                            level
+                          )} ${
+                            isSelected
+                              ? "ring-2 ring-purple-700 ring-offset-2"
+                              : ""
+                          } ${
+                            isFuture
+                              ? "cursor-default"
+                              : "cursor-pointer hover:scale-125 hover:ring-2 hover:ring-purple-300 hover:ring-offset-1"
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-7 gap-2 text-center">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-            (day) => (
-              <div
-                key={day}
-                className="py-2 text-xs font-semibold text-gray-400"
-              >
-                {day}
-              </div>
-            )
-          )}
+        {/* Legend */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
+          <p className="text-xs text-gray-400">
+            Select any square to view that day's activity.
+          </p>
 
-          {calendar.cells.map((day, index) => {
-            if (day === null) {
-              return <div key={`empty-${index}`} />;
-            }
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-gray-500">Less</span>
 
-            const dateKey = getDateKey(day);
-            const record = progressMap.get(dateKey);
-            const isSelected = selectedDate === dateKey;
+            {[0, 1, 2, 3, 4].map((level) => (
+              <span
+                key={level}
+                className={`h-3 w-3 rounded-[3px] border ${getActivityColor(
+                  level
+                )}`}
+              />
+            ))}
 
-            return (
-              <button
-                key={dateKey}
-                onClick={() => setSelectedDate(dateKey)}
-                className={`flex aspect-square flex-col items-center justify-center rounded-xl border text-sm transition ${
-                  isSelected
-                    ? "border-purple-600 bg-purple-600 text-white"
-                    : record
-                      ? "border-purple-200 bg-purple-100 font-bold text-purple-800 hover:bg-purple-200"
-                      : "border-gray-100 bg-gray-50 text-gray-600 hover:bg-purple-50"
-                }`}
-                title={
-                  record
-                    ? `${record.totalInterviews} interviews`
-                    : "No practice recorded"
-                }
-              >
-                <span>{day}</span>
-                {record && (
-                  <span className="mt-0.5 text-[9px]">
-                    {record.totalInterviews} ✓
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded bg-gray-100" />
-            No practice
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded bg-purple-200" />
-            Practice completed
-          </span>
+            <span className="text-[11px] text-gray-500">More</span>
+          </div>
         </div>
       </div>
 
       {/* Selected Date Details */}
       {selectedDate && (
         <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-800">
-            {formatDate(selectedDate)}
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-lg font-bold text-gray-800">
+              {formatDate(selectedDate)}
+            </h3>
+
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+            >
+              Clear selection ✕
+            </button>
+          </div>
 
           {selectedDay ? (
             <>
@@ -328,6 +470,7 @@ export default function DailyProgress() {
                       <p className="font-semibold text-gray-800">
                         {interview.category || "General Interview"}
                       </p>
+
                       <p className="font-bold text-purple-700">
                         {interview.score ?? "—"}/10
                       </p>
@@ -359,11 +502,12 @@ export default function DailyProgress() {
         </div>
       )}
 
-      {/* Daily Score Chart */}
+      {/* Daily Performance */}
       <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-bold text-gray-800">
           Daily Performance
         </h3>
+
         <p className="mt-1 text-sm text-gray-500">
           Average interview score for each practice day.
         </p>
@@ -380,6 +524,7 @@ export default function DailyProgress() {
                   <span className="text-gray-600">
                     {formatDate(day.date)}
                   </span>
+
                   <span className="font-semibold text-purple-700">
                     {day.averageScore}/10
                   </span>

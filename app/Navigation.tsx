@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -59,7 +60,6 @@ const navSections: NavSection[] = [
       {
         name: "Resume Interview",
         href: "/resume",
-        badge: "New",
         icon: (props) => (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
             <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
@@ -73,6 +73,17 @@ const navSections: NavSection[] = [
   {
     title: "Prep & Skill Analysis",
     items: [
+      {
+        name: "ATS Resume Checker",
+        href: "/ats",
+        icon: (props) => (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+            <path d="M14 2v6h6" />
+            <path d="m8 15 2.5 2.5L16 12" />
+          </svg>
+        ),
+      },
       {
         name: "Skill Gap Analyzer",
         href: "/skill-gap",
@@ -222,7 +233,10 @@ export default function Navigation() {
               </p>
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/dashboard" &&
+                      pathname.startsWith(item.href));
                   const Icon = item.icon;
 
                   return (
@@ -254,8 +268,6 @@ export default function Navigation() {
                               ? "bg-indigo-600 text-white"
                               : item.badge === "Live"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200/80"
-                              : item.badge === "New"
-                              ? "bg-amber-50 text-amber-700 border border-amber-200/80"
                               : "bg-indigo-50 text-indigo-600 border border-indigo-100"
                           }`}
                         >

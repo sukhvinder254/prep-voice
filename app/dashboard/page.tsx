@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import DailyProgress from "./DailyProgress";
+import TrackProgressReport from "./TrackProgressReport";
 
 export const dynamic = "force-dynamic";
 

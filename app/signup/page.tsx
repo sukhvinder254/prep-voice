@@ -23,11 +23,12 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient();
+      const cleanedEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: cleanedEmail,
+        password: password.trim(),
         options: {
-          data: { full_name: name },
+          data: { full_name: name.trim() },
         },
       });
 
